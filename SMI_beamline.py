@@ -1,5 +1,5 @@
 import numpy as np
-from pyFAI import detectors, AzimuthalIntegrator
+from pyFAI import detectors, azimuthalIntegrator
 from pyFAI.detectors import Pilatus300kw, Pilatus1M
 from pygix import Transform
 
@@ -106,10 +106,10 @@ class SMI_geometry():
 
 
     def calculate_integrator_trans(self):
-        self.ai = AzimuthalIntegrator(**{'detector': self.det,
+        self.ai = azimuthalIntegrator.AzimuthalIntegrator(**{'detector': self.det,
                                     'rot1':0,
-                                    'rot2': 0,
-                                    'rot3': 0})
+                                    'rot2':0,
+                                    'rot3':0})
 
         self.ai.setFit2D(self.sdd, self.center[0], self.center[1])
         self.ai.set_wavelength(self.wav)
@@ -128,7 +128,8 @@ class SMI_geometry():
                                                                   file,
                                                                   self.det_ini_angle,
                                                                   self.det_angle_step,
-                                                                  self.ai)
+                                                                  self.ai,
+                                                                  self.mask)
 
         elif self.geometry== 'Reflection':
             self.calculate_integrator_gi()
@@ -136,7 +137,8 @@ class SMI_geometry():
                                                                     file,
                                                                     self.det_ini_angle,
                                                                     self.det_angle_step,
-                                                                    self.ai)
+                                                                    self.ai,
+                                                                    self.mask)
 
         else:
             raise Exception('Unknown geometry')

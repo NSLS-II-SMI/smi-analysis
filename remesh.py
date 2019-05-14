@@ -4,7 +4,7 @@ from pyFAI import geometry, AzimuthalIntegrator
 import SMI_beamline
 
 
-def remesh_gi(data, ai, npt=None, ip_range=None, op_range=None, method='splitbbox', pixel_bs=None):
+def remesh_gi(data, ai, npt=None, ip_range=None, op_range=None, method='splitbbox', pixel_bs=None, mask=None):
     '''
     Remeshing GI configuration using pygix
     Args:
@@ -16,7 +16,6 @@ def remesh_gi(data, ai, npt=None, ip_range=None, op_range=None, method='splitbbo
     q_par: 1D array: 1D array containing the q-parrallel coordinate
     q_ver: 1D array: 1D array containing the q-vertical coordinate
     '''
-    mask = SMI_beamline.create_mask(data, pixel_bs)
     img, q_par, q_ver = ai.transform_reciprocal(data, npt=npt, ip_range=ip_range, op_range=op_range, method='splitbbox',
                                                 mask=np.logical_not(mask))
 
@@ -24,7 +23,7 @@ def remesh_gi(data, ai, npt=None, ip_range=None, op_range=None, method='splitbbo
 
 
 def remesh_transmission(data, ai, npt = None, alphai=0., bins=None, q_h_range=None, q_v_range=None, method='splitbbox',
-                        pixel_bs=None):
+                        pixel_bs=None, mask=None):
     '''
     Remeshing transmission configuration using pyFAI
     Args:
@@ -36,7 +35,6 @@ def remesh_transmission(data, ai, npt = None, alphai=0., bins=None, q_h_range=No
     q_par: 1D array: 1D array containing the q-parrallel coordinate
     q_ver: 1D array: 1D array containing the q-vertical coordinate
     '''
-    mask = SMI_beamline.create_mask(data, pixel_bs)
     img, q_par, q_ver = remesh(data,
                                ai,
                                alphai = 0.,
@@ -93,7 +91,7 @@ def remesh(image,
     if q_v_range is None: q_v_range = (q_v.min(), q_v.max())
 
 
-    I, q_y, q_z, _, _ = pyFAI.ext.splitBBox.histoBBox2d(weights=image,
+    I, q_y, q_z, _, _ = splitBBox.histoBBox2d(weights=image,
                                               pos0=q_h,
                                               delta_pos0=np.ones_like(image) * (q_h_range[1] - q_h_range[0]) / bins[0],
                                               pos1=q_v,
@@ -105,7 +103,6 @@ def remesh(image,
                                               delta_dummy=None,
                                               allow_pos0_neg=True,
                                               mask=mask,
-                                              clip_pos1 = 1
                                               # dark=dark,
                                               # flat=flat,
                                               # solidangle=solidangle,
