@@ -1,6 +1,6 @@
 from pyFAI import azimuthalIntegrator
 from pygix import Transform
-import Detector, stitch
+import Detector, stitch, integrate1D
 
 #TODO: What to do with Angular step and initial angle
 class SMI_geometry():
@@ -27,13 +27,15 @@ class SMI_geometry():
         self.det_ini_angle = det_ini_angle
         self.det_angle_step = det_angle_step
 
+        self.ai = None
+
         self.define_detector()
 
 
 
     def define_detector(self):
         if self.detector == 'Pilatus1m':
-            self.det = Pilatus1M_SMI()
+            self.det = Detector.Pilatus1M_SMI()
 
             self.det_ini_angle = 0
             self.det_angle_step = 0
@@ -41,17 +43,18 @@ class SMI_geometry():
             self.mask = self.det.calc_mask(bs=self.bs)
 
         elif self.detector == 'Pilatus300kw':
-            self.det = VerticalPilatus300kw()
+            self.det = Detector.VerticalPilatus300kw()
             self.mask = self.det.calc_mask(bs=self.bs)
 
         elif self.detector == 'rayonix':
-            self.det = Rayonix()
+            self.det = Detector.Rayonix()
             self.mask = self.det.calc_mask()
 
         else:
             raise Exception('Unknown detector for SMI')
 
-
+    #TODO: ship the mask with the azimuthal integrator
+    #TODO: update the rot1 for each image and ship a list of images and ais
     def calculate_integrator_trans(self):
         self.ai = azimuthalIntegrator.AzimuthalIntegrator(**{'detector': self.det,
                                     'rot1':0,
@@ -70,7 +73,8 @@ class SMI_geometry():
 
     def stitching_data(self, path, file):
         if self.geometry == 'Transmission':
-            self.calculate_integrator_trans()
+            if self.ai == None:
+                self.calculate_integrator_trans()
             self.img_st, self.qp, self.qz = stitch.stitching_waxs(path,
                                                                   file,
                                                                   self.det_ini_angle,
@@ -79,7 +83,39 @@ class SMI_geometry():
                                                                   self.mask)
 
         elif self.geometry== 'Reflection':
-            self.calculate_integrator_gi()
+            if self.ai == None:
+                self.calculate_integrator_gi()
+            self.img_st, self.qp, self.qz = stitch.stitching_giwaxs(path,
+                                                                    file,
+                                                                    self.det_ini_angle,
+                                                                    self.det_angle_step,
+                                                                    self.ai,
+                                                                    self.mask)
+        else:
+            raise Exception('Unknown geometry')
+
+
+    #TODO: Should all the images treated as a multigeometry: test if any difference
+    #TODO: Comparison of the radial averaging image by image and multigeometry
+    #TODO: Start playing with pygix for 1D cuts and radial, azimuthal averaging
+    #TODO: Start looking into pygix multigeometry
+    def radial_averaging(self, path, file):
+        if self.geometry == 'Transmission':
+            if self.ai == None:
+                self.calculate_integrator_trans()
+            self.q_rad, self.I_rad = integrate1D.integrate_rad_saxs(path,
+                                                                    file,
+                                                                    self.det_ini_angle,
+                                                                    self.det_angle_step,
+                                                                    self.ai,
+                                                                    self.mask)
+
+
+        elif self.geometry== 'Reflection':
+            raise Exception('To be done')
+
+            if self.ai == None:
+                self.calculate_integrator_gi()
             self.img_st, self.qp, self.qz = stitch.stitching_giwaxs(path,
                                                                     file,
                                                                     self.det_ini_angle,
@@ -90,13 +126,29 @@ class SMI_geometry():
         else:
             raise Exception('Unknown geometry')
 
+    def azimuthal_averaging(self, path, file):
+        if self.geometry == 'Transmission':
+            if self.ai == None:
+                self.calculate_integrator_trans()
+            self.q_azi, self.I_azi = integrate1D.integrate_azi_saxs(path,
+                                                                    file,
+                                                                    self.det_ini_angle,
+                                                                    self.det_angle_step,
+                                                                    self.ai,
+                                                                    self.mask)
 
-    #TODO: Should all the images treated as a multigeometry: test if any difference
-    #TODO: Comparison of the radial averaging image by image and multigeometry
-    #TODO: Start playing with pygix for 1D cuts and radial, azimuthal averaging
-    #TODO: Start looking into pygix multigeometry
-    def radial_averaging(self):
-        raise Exception('To be done')
 
-    def azimuthal_averaging(self):
-        raise Exception('To be done')
+        elif self.geometry== 'Reflection':
+            raise Exception('To be done')
+
+            if self.ai == None:
+                self.calculate_integrator_gi()
+            self.img_st, self.qp, self.qz = stitch.stitching_giwaxs(path,
+                                                                    file,
+                                                                    self.det_ini_angle,
+                                                                    self.det_angle_step,
+                                                                    self.ai,
+                                                                    self.mask)
+
+        else:
+            raise Exception('Unknown geometry')
