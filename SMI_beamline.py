@@ -35,11 +35,22 @@ class VerticalPilatus300kw(Pilatus300kw):
     def calc_mask(self, bs):
         mask = np.rot90(np.logical_not(detectors.Pilatus300kw().calc_mask()), 1)
 
-        # Dead pixels
-        mask[-5:, :], mask[:5, :], mask[:, -5:], mask[:, :5] = False, False, False, False
+        # Dead pixel
+        dead_pix_x = [228, 307, 733, 733, 792, 1211, 1211, 1231, 1232, 1276, 1321, 1366, 1405, 1467]
+        dead_pix_y = [21, 67, 170, 171, 37, 109, 110, 74, 74, 57, 81, 181, 46, 188]
+        for d_x, d_y in zip(dead_pix_x, dead_pix_y):
+            mask[d_x, d_y] = False
+
+        # Hot pixels
+        mask[1314, 81] = False
+        mask[732, 7], mask[732, 8], mask[733, 8], mask[733, 7], mask[733, 9] = False, False, False, False, False
+        mask[1314, 82], mask[1315, 81] = False, False
+
+        mask[674, 133], mask[674, 134], mask[1130, 20], mask[1239, 50] = False, False, False, False
 
         # Beamstop
-        mask[bs[1]:, bs[0]-11:bs[0]+11] = False
+        mask[bs[0]:, bs[1] - 11:bs[1] + 11] = False
+
         return mask
 
 
