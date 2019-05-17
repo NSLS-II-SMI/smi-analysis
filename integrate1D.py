@@ -44,7 +44,7 @@ def integrate_azi_saxs(path, file, initial_angle, angular_step, ai, mask):
 
 
 #TODO: Do the same with pyGIX
-def integrate_rad_gisaxs(path, file, initial_angle, angular_step, ai, mask):
+def integrate_rad_gisaxs(path, file, initial_angle, angular_step, ai, mask, npt):
     for i, fi in enumerate(file):
         ai.set_rot1(initial_angle + i * angular_step)
         img = np.rot90(fabio.open(os.path.join(path, fi)).data, 1)
@@ -52,23 +52,23 @@ def integrate_rad_gisaxs(path, file, initial_angle, angular_step, ai, mask):
         q_rad, I_rad = ai.profile_sector(data=img,
                                          npt=npt,
                                          correctSolidAngle=False,
-                                        variance=None,
-                                        error_model=None,
-                                        chi_pos=None,
-                                        chi_width=None,
-                                        radial_range=None,
-                                        mask=mask,
-                                        polarization_factor=None,
-                                        method="splitpix",
-                                        unit=grazing_units.Q,
-                                        normalization_factor=1.)
+                                         variance=None,
+                                         error_model=None,
+                                         chi_pos=None,
+                                         chi_width=None,
+                                         radial_range=None,
+                                         mask=np.logical_not(mask),
+                                         polarization_factor=None,
+                                         method="splitpix",
+                                         #unit=grazing_units.Q,
+                                         normalization_factor=1.)
         return q_rad, I_rad
 
 
 
 
 #TODO: Add inpaint here for improvement
-def integrate_azi_gisaxs(path, file, initial_angle, angular_step, ai, mask):
+def integrate_azi_gisaxs(path, file, initial_angle, angular_step, ai, mask, npt):
     for i, fi in enumerate(file):
         ai.set_rot1(initial_angle + i * angular_step)
         img = np.rot90(fabio.open(os.path.join(path, fi)).data, 1)
@@ -76,20 +76,20 @@ def integrate_azi_gisaxs(path, file, initial_angle, angular_step, ai, mask):
         q_azi, I_azi = ai.profile_sector(data=img,
                                          npt=npt,
                                          correctSolidAngle=False,
-                                        variance=None,
-                                        error_model=None,
+                                         variance=None,
+                                         error_model=None,
                                          radial_pos=None,
                                          radial_width=None,
                                          chi_range=None,
-                                        mask=mask,
-                                        polarization_factor=None,
-                                        method="splitpix",
-                                        unit=grazing_units.Q,
-                                        normalization_factor=1.)
+                                         mask=np.logical_not(mask),
+                                         polarization_factor=None,
+                                         method="splitpix",
+                                         #unit=grazing_units.Q,
+                                         normalization_factor=1.)
 
         return q_azi, I_azi
 
-def integrate_qpar_gisaxs(path, file, initial_angle, angular_step, ai, mask):
+def integrate_qpar_gisaxs(path, file, initial_angle, angular_step, ai, mask, npt):
     for i, fi in enumerate(file):
         ai.set_rot1(initial_angle + i * angular_step)
         img = np.rot90(fabio.open(os.path.join(path, fi)).data, 1)
@@ -97,21 +97,21 @@ def integrate_qpar_gisaxs(path, file, initial_angle, angular_step, ai, mask):
         q_par, I_par = ai.profile_sector(data=img,
                                          npt=npt,
                                          correctSolidAngle=False,
-                                        variance=None,
-                                        error_model=None,
+                                         variance=None,
+                                         error_model=None,
                                          ip_pos=0.0,
                                          ip_width=30.0,
                                          op_range=None,
-                                        mask=mask,
-                                        polarization_factor=None,
-                                        method="splitpix",
-                                        unit=grazing_units.Q,
-                                        normalization_factor=1.)
+                                         mask=np.logical_not(mask),
+                                         polarization_factor=None,
+                                         method="splitpix",
+                                         #unit=grazing_units.Q,
+                                         normalization_factor=1.)
 
         return q_par, I_par
 
 
-def integrate_qper_gisaxs(path, file, initial_angle, angular_step, ai, mask):
+def integrate_qper_gisaxs(path, file, initial_angle, angular_step, ai, mask, npt):
     for i, fi in enumerate(file):
         ai.set_rot1(initial_angle + i * angular_step)
         img = np.rot90(fabio.open(os.path.join(path, fi)).data, 1)
@@ -119,15 +119,15 @@ def integrate_qper_gisaxs(path, file, initial_angle, angular_step, ai, mask):
         q_per, I_per = ai.profile_sector(data=img,
                                          npt=npt,
                                          correctSolidAngle=False,
-                                        variance=None,
-                                        error_model=None,
+                                         variance=None,
+                                         error_model=None,
                                          op_pos=0.0,
                                          op_width=30.0,
                                          ip_range=None,
-                                        mask=mask,
-                                        polarization_factor=None,
-                                        method="splitpix",
-                                        unit=grazing_units.Q,
-                                        normalization_factor=1.)
+                                         mask=np.logical_not(mask),
+                                         polarization_factor=None,
+                                         method="splitpix",
+                                         #unit=grazing_units.Q,
+                                         normalization_factor=1.)
 
         return q_per, I_per
