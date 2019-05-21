@@ -75,7 +75,7 @@ class SMI_geometry():
         if self.geometry == 'Transmission':
             if self.ai == []:
                 for i, file in enumerate(files):
-                    det_rot = self.det_ini_angle + i * self.det_angle_step\
+                    det_rot = self.det_ini_angle + i * self.det_angle_step
                     self.ai.append(self.calculate_integrator_trans(det_rot))
 
             self.img_st, self.qp, self.qz = stitch.stitching_waxs(path,
@@ -97,57 +97,51 @@ class SMI_geometry():
             raise Exception('Unknown geometry')
 
 
+
+
     #TODO: Start playing with pygix for 1D cuts and radial, azimuthal averaging
-    def radial_averaging(self, path, file):
+    def radial_averaging(self, path, files):
         if self.geometry == 'Transmission':
-            if self.ai == None:
-                self.calculate_integrator_trans()
+            if self.ai == []:
+                for i, file in enumerate(files):
+                    det_rot = self.det_ini_angle + i * self.det_angle_step
+                    self.ai.append(self.calculate_integrator_trans(det_rot))
+
             self.q_rad, self.I_rad = integrate1D.integrate_rad_saxs(path,
-                                                                    file,
-                                                                    self.det_ini_angle,
-                                                                    self.det_angle_step,
-                                                                    self.ai,
-                                                                    self.mask)
+                                                               files,
+                                                               self.ai)
 
 
         elif self.geometry== 'Reflection':
             raise Exception('To be done')
 
-            if self.ai == None:
+            if self.ai == []:
                 self.calculate_integrator_gi()
-            self.img_st, self.qp, self.qz = stitch.stitching_giwaxs(path,
-                                                                    file,
-                                                                    self.det_ini_angle,
-                                                                    self.det_angle_step,
-                                                                    self.ai,
-                                                                    self.mask)
-
+            self.qp, self.qz = stitch.stitching_giwaxs(path,
+                                                        file,
+                                                        self.ai)
         else:
             raise Exception('Unknown geometry')
 
-    def azimuthal_averaging(self, path, file):
+    def azimuthal_averaging(self, path, files):
         if self.geometry == 'Transmission':
-            if self.ai == None:
-                self.calculate_integrator_trans()
+            if self.ai == []:
+                for i, file in enumerate(files):
+                    det_rot = self.det_ini_angle + i * self.det_angle_step
+                    self.ai.append(self.calculate_integrator_trans(det_rot))
+
             self.q_azi, self.I_azi = integrate1D.integrate_azi_saxs(path,
-                                                                    file,
-                                                                    self.det_ini_angle,
-                                                                    self.det_angle_step,
-                                                                    self.ai,
-                                                                    self.mask)
+                                                               files,
+                                                               self.ai)
 
 
         elif self.geometry== 'Reflection':
             raise Exception('To be done')
 
-            if self.ai == None:
+            if self.ai == []:
                 self.calculate_integrator_gi()
-            self.img_st, self.qp, self.qz = stitch.stitching_giwaxs(path,
-                                                                    file,
-                                                                    self.det_ini_angle,
-                                                                    self.det_angle_step,
-                                                                    self.ai,
-                                                                    self.mask)
-
+            self.qp, self.qz = stitch.stitching_giwaxs(path,
+                                                        file,
+                                                        self.ai)
         else:
             raise Exception('Unknown geometry')
