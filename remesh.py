@@ -4,7 +4,7 @@ from pyFAI import geometry, AzimuthalIntegrator
 import SMI_beamline
 
 
-def remesh_gi(data, ai, npt=None, ip_range=None, op_range=None, method='splitbbox', pixel_bs=None, mask=None):
+def remesh_gi(data, ai, npt=None, ip_range=None, op_range=None, method='splitbbox', mask=None):
     '''
     Remeshing GI configuration using pygix
     Args:
@@ -16,8 +16,14 @@ def remesh_gi(data, ai, npt=None, ip_range=None, op_range=None, method='splitbbo
     q_par: 1D array: 1D array containing the q-parrallel coordinate
     q_ver: 1D array: 1D array containing the q-vertical coordinate
     '''
-    img, q_par, q_ver = ai.transform_reciprocal(data, npt=npt, ip_range=ip_range, op_range=op_range, method='splitbbox',
+
+    img, q_par, q_ver = ai.transform_reciprocal(data,
+                                                npt=npt,
+                                                ip_range=ip_range,
+                                                op_range=op_range,
+                                                method=method,
                                                 mask=np.logical_not(mask))
+    print(ai)
 
     return img, q_par, q_ver
 
