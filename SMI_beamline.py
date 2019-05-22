@@ -1,6 +1,9 @@
 from pyFAI import azimuthalIntegrator
 from pygix import Transform
 import Detector, stitch, integrate1D
+import os
+import fabio
+import numpy as np
 
 #TODO: What to do with Angular step and initial angle
 class SMI_geometry():
@@ -50,47 +53,63 @@ class SMI_geometry():
             raise Exception('Unknown detector for SMI')
 
 
-    def calculate_integrator_trans(self, det_rot):
+    def open_data(self, path, lst_img):
+        if self.detector == None:
+            self.define_detector()
+
+        self.imgs = []
+        for img in lst_img:
+            if self.detector == 'Pilatus1m':
+                self.imgs.append(fabio.open(os.path.join(path, img)).data)
+
+            elif self.detector == 'Pilatus300kw':
+                self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1))
+
+    def calculate_integrator_trans(self, det_rots):
         ai = azimuthalIntegrator.AzimuthalIntegrator(**{'detector': self.det,
                                     'rot1':0,
                                     'rot2':0,
                                     'rot3':0})
 
         ai.setFit2D(self.sdd, self.center[0], self.center[1])
-        ai.set_rot1(det_rot)
         ai.set_wavelength(self.wav)
         ai.set_mask(self.mask)
-        return ai
+
+        for det_rot in det_rots:
+            ai.set_rot1(det_rot)
+            self.ai.append(ai)
 
 
-    def calculate_integrator_gi(self, det_rot):
-        ai = Transform(wavelength=self.wav, detector=self.det)
-        ai.set_rot1(det_rot)
+
+    def calculate_integrator_gi(self, det_rots):
+        ai = Transform(wavelength=self.wav, detector=self.det, incident_angle=self.alphai)
         ai.setFit2D(directDist= self.sdd, centerX=self.center[0], centerY=self.center[1])
         ai.set_incident_angle(self.alphai)
         ai.set_mask(self.mask)
-        return ai
 
-    def stitching_data(self, path, files):
+        for det_rot in det_rots:
+            ai.set_rot1(det_rot)
+            self.ai.append(ai)
+
+    def stitching_data(self):
+        self.ai = []
+        self.img_st, self.qp, self.qz = [], [], []
+
         if self.geometry == 'Transmission':
             if self.ai == []:
-                for i, file in enumerate(files):
-                    det_rot = self.det_ini_angle + i * self.det_angle_step
-                    self.ai.append(self.calculate_integrator_trans(det_rot))
+                det_rot = [self.det_ini_angle + i * self.det_angle_step for i in range(0, len(self.imgs), 1)]
+                self.calculate_integrator_trans(det_rot)
 
-            self.img_st, self.qp, self.qz = stitch.stitching_waxs(path,
-                                                                  files,
+            self.img_st, self.qp, self.qz = stitch.stitching_waxs(self.imgs,
                                                                   self.ai)
 
 
         elif self.geometry== 'Reflection':
-            if self.ai == None:
-                for i, file in enumerate(files):
-                    det_rot = self.det_ini_angle + i * self.det_angle_step
-                    self.ai.append(self.calculate_integrator_gi(det_rot))
+            if self.ai == []:
+                det_rot = [self.det_ini_angle + i * self.det_angle_step for i in range(0, len(self.imgs), 1)]
+                self.calculate_integrator_gi(det_rot)
 
-            self.img_st, self.qp, self.qz = stitch.stitching_giwaxs(path,
-                                                                    files,
+            self.img_st, self.qp, self.qz = stitch.stitching_giwaxs(self.imgs,
                                                                     self.ai)
 
         else:
@@ -100,48 +119,90 @@ class SMI_geometry():
 
 
     #TODO: Start playing with pygix for 1D cuts and radial, azimuthal averaging
-    def radial_averaging(self, path, files):
+    def radial_averaging(self, npt = 2000):
+        self.q_rad, self.I_rad = [], []
         if self.geometry == 'Transmission':
             if self.ai == []:
-                for i, file in enumerate(files):
-                    det_rot = self.det_ini_angle + i * self.det_angle_step
-                    self.ai.append(self.calculate_integrator_trans(det_rot))
+                det_rot = [self.det_ini_angle + i * self.det_angle_step for i in range(0, len(self.imgs), 1)]
+                self.calculate_integrator_trans(det_rot)
 
-            self.q_rad, self.I_rad = integrate1D.integrate_rad_saxs(path,
-                                                               files,
-                                                               self.ai)
-
+            self.q_rad, self.I_rad = integrate1D.integrate_rad_saxs(self.imgs,
+                                                                    self.ai,
+                                                                    npt = npt)
 
         elif self.geometry== 'Reflection':
-            raise Exception('To be done')
-
             if self.ai == []:
-                self.calculate_integrator_gi()
-            self.qp, self.qz = stitch.stitching_giwaxs(path,
-                                                        file,
-                                                        self.ai)
+                det_rot = [self.det_ini_angle + i * self.det_angle_step for i in range(0, len(self.imgs), 1)]
+                self.calculate_integrator_gi(det_rot)
+
+            self.q_rad, self.I_rad = integrate1D.integrate_rad_gisaxs(self.imgs,
+                                                                      self.ai,
+                                                                      npt = npt,
+                                                                      p0_range = None,
+                                                                      p1_range = None)
+
         else:
             raise Exception('Unknown geometry')
 
-    def azimuthal_averaging(self, path, files):
+    def azimuthal_averaging(self):
+        self.q_azi, self.I_azi = [], []
         if self.geometry == 'Transmission':
             if self.ai == []:
-                for i, file in enumerate(files):
-                    det_rot = self.det_ini_angle + i * self.det_angle_step
-                    self.ai.append(self.calculate_integrator_trans(det_rot))
+                det_rot = [self.det_ini_angle + i * self.det_angle_step for i in range(0, len(self.imgs), 1)]
+                self.calculate_integrator_trans(det_rot)
 
-            self.q_azi, self.I_azi = integrate1D.integrate_azi_saxs(path,
-                                                               files,
-                                                               self.ai)
+            self.q_azi, self.I_azi = integrate1D.integrate_azi_saxs(self.imgs,
+                                                                    self.ai)
 
 
         elif self.geometry== 'Reflection':
-            raise Exception('To be done')
-
             if self.ai == []:
-                self.calculate_integrator_gi()
-            self.qp, self.qz = stitch.stitching_giwaxs(path,
-                                                        file,
-                                                        self.ai)
+                det_rot = [self.det_ini_angle + i * self.det_angle_step for i in range(0, len(self.imgs), 1)]
+                self.calculate_integrator_trans(det_rot)
+
+            self.q_azi, self.I_azi = integrate1D.integrate_azi_gisaxs(self.imgs,
+                                                                      self.ai)
         else:
             raise Exception('Unknown geometry')
+
+
+    def horizonthal_integration(self, op_pos=0.0, op_width=30.0, ip_range=None):
+        self.q_hor, self.I_hor = [], []
+        if self.geometry == 'Transmission':
+            raise Exception('Do you really want that for transmission?')
+
+        elif self.geometry== 'Reflection':
+            if self.ai == []:
+                det_rot = [self.det_ini_angle + i * self.det_angle_step for i in range(0, len(self.imgs), 1)]
+                self.calculate_integrator_trans(det_rot)
+
+            self.q_hor, self.I_hor = integrate1D.integrate_qpar_gisaxs(self.imgs,
+                                                                       self.ai,
+                                                                       npt=2000,
+                                                                       op_pos=op_pos,
+                                                                       op_width=op_width,
+                                                                       ip_range=ip_range)
+
+        else:
+            raise Exception('Unknown geometry')
+
+
+    def vertical_integration(self, ip_pos=0.0, ip_width=30.0, op_range=None):
+        self.q_ver, self.I_ver = [], []
+        if self.geometry == 'Transmission':
+            raise Exception('Do you really want that for transmission?')
+
+        elif self.geometry== 'Reflection':
+            if self.ai == []:
+                det_rot = [self.det_ini_angle + i * self.det_angle_step for i in range(0, len(self.imgs), 1)]
+                self.calculate_integrator_trans(det_rot)
+
+            self.q_ver, self.I_ver = integrate1D.integrate_qper_gisaxs(self.imgs,
+                                                                       self.ai,
+                                                                       npt=2000,
+                                                                       ip_pos=ip_pos,
+                                                                       ip_width=ip_width,
+                                                                       op_range=op_range)
+        else:
+            raise Exception('Unknown geometry')
+
