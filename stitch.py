@@ -2,6 +2,19 @@ import numpy as np
 import remesh
 
 def stitching(datas, ais, geometry ='Reflection'):
+    '''
+    Remeshing in q-space the 2D image collected by the pixel detector and stitching together images at different detector position (if several images)
+
+    Parameters:
+    -----------
+    :param datas: List of 2D 2D image in pixel
+    :type datas: ndarray
+    :param ais: List of AzimuthalIntegrator/Transform generated using pyGIX/pyFAI which contain the information about the experiment geometry
+    :type ais: list of AzimuthalIntegrator / TransformIntegrator
+    :param geometry: Geometry of the experiment (either Transmission or Reflection)
+    :type geometry: string
+    '''
+
     for i, (data, ai) in enumerate(zip(datas, ais)):
         if geometry == 'Reflection':
             img, x, y = remesh.remesh_gi(data, ai, method='splitbbox', mask=ai.mask)
@@ -42,7 +55,7 @@ def stitching(datas, ais, geometry ='Reflection'):
         elif geometry == 'Transmission':
             ip_range = (qp_remesh[qp_start], qp_remesh[qp_stop])
             op_range = (qz_remesh[0], qz_remesh[-1])
-            qimage, x, y = remesh.remesh_transmission(data, ai, npt=npt, q_h_range=ip_range, q_v_range=op_range, mask=ai.mask)
+            qimage, x, y = remesh.remesh_transmission(data, ai, bins=npt, q_h_range=ip_range, q_v_range=op_range, mask=ai.mask)
 
 
         if i == 0:
@@ -69,12 +82,11 @@ def stitching(datas, ais, geometry ='Reflection'):
             sca2[:, qp_start:  qp_start + np.shape(qimage)[1]] += (qimage >= 1).astype(int) * scale
 
     sca2[np.where(sca2 == 0)] = 1
-    img_fin = img_te / sca2
+    img = img_te / sca2
 
     if geometry == 'Reflection':
-        img_fin = np.flipud(img_fin)
-
+        img = np.flipud(img)
     qp = [qp_remesh.min(), qp_remesh.max()]
     qz = [-qz_remesh.max(), -qz_remesh.min()]
 
-    return img_fin, qp, qz
+    return img, qp, qz
