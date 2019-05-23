@@ -1,56 +1,35 @@
 import numpy as np
 from pyFAI.ext import splitBBox
-from pyFAI import geometry, AzimuthalIntegrator
-import SMI_beamline
 
+def remesh_gi(data, ai, npt=None, q_h_range=None, q_v_range=None, method='splitbbox', mask=None):
+    """
+    Remeshing Grazing-Incidence configuration using pyGIX
 
-def remesh_gi(data, ai, npt=None, ip_range=None, op_range=None, method='splitbbox', mask=None):
-    '''
-    Remeshing GI configuration using pygix
     Args:
-    data: np.array: 2D image in pixel
-    ai: geometry generated using pyFAI
-
-    Return:
-    img: 2D array: 2D images remeshed in q space
-    q_par: 1D array: 1D array containing the q-parrallel coordinate
-    q_ver: 1D array: 1D array containing the q-vertical coordinate
-    '''
+    :param data: 2D image in pixel
+    :type data: numpy 2D array of float
+    :param ai: pyGIX transform operator
+    :type ai: pyGIXTransform operator
+    :param npt: number of point for the binning
+    :type npt: int
+    :param q_h_range: Starting and ending point for the q_horizontal range
+    :type q_h_range: Tuple(float, float), optional
+    :param q_v_range: Starting and ending point for the q_vertical range
+    :type q_v_range: Tuple(float, float), optional
+    :param method: Method fot the remeshing
+    :type method: String: 'splitbbox', ...
+    :param mask: Mask of the 2D raw image
+    :type mask: numpy 2D array of boolean
+    """
 
     img, q_par, q_ver = ai.transform_reciprocal(data,
                                                 npt=npt,
-                                                ip_range=ip_range,
-                                                op_range=op_range,
+                                                ip_range=q_h_range,
+                                                op_range=q_v_range,
                                                 method=method,
                                                 mask=np.logical_not(mask))
-    print(ai)
 
     return img, q_par, q_ver
-
-
-def remesh_transmission(data, ai, npt = None, alphai=0., bins=None, q_h_range=None, q_v_range=None, method='splitbbox',
-                        pixel_bs=None, mask=None):
-    '''
-    Remeshing transmission configuration using pyFAI
-    Args:
-    data: np.array: 2D image in pixel
-    ai: geometry generated using pyFAI
-
-    Return:
-    img: 2D array: 2D images remeshed in q space
-    q_par: 1D array: 1D array containing the q-parrallel coordinate
-    q_ver: 1D array: 1D array containing the q-vertical coordinate
-    '''
-    img, q_par, q_ver = remesh(data,
-                               ai,
-                               alphai = 0.,
-                               bins=bins,
-                               q_h_range=q_h_range,
-                               q_v_range=q_v_range,
-                               mask=np.logical_not(mask))
-
-    return img, q_par, q_ver
-
 
 
 def q_from_angles(phi, alpha, wavelength):
@@ -69,16 +48,29 @@ def phi(x, y, z):
     return np.arctan2(x, np.sqrt(y ** 2 + z ** 2))
 
 
-def remesh(image,
-           ai,
-           alphai,
-           bins,
-           q_h_range,
-           q_v_range,
-           out_range=None,
-           res=None,
-           coord_sys='qp_qz',
-           mask=None):
+def remesh_transmission(image, ai, bins, q_h_range, q_v_range, out_range=None, coord_sys='qp_qz', mask=None):
+    """
+    Redraw the Transmission image in (qp, qz) coordinates using pyFAI splitBBox.histoBBox2d method
+
+    Parameters:
+    -----------
+    :param image: 2D raw Detector image in pixel
+    :type image: ndarray
+    :param ai: PyFAI AzimuthalIntegrator
+    :type ai: PyFAI AzimuthalIntegrator
+    :param bins: number of point for the binning
+    :type bins: int
+    :param q_h_range: Starting and ending point for the q_horizontal range
+    :type q_h_range: Tuple(float, float), optional
+    :param q_v_range: Starting and ending point for the q_vertical range
+    :type q_v_range: Tuple(float, float), optional
+    :param out_range: q range of the output image
+    :type out_range: [[left, right],[lower, upper]], optional
+    :param coord_sys: Output ooordinate system
+    :type coord_sys: str, 'qp_qz', 'qy_qz' or 'theta_alpha'
+    :param mask: Mask of the 2D raw image
+    :type mask: numpy 2D array of boolean
+    """
 
     assert image.shape == ai.detector.shape
     x = np.arange(image.shape[1])
@@ -108,14 +100,13 @@ def remesh(image,
                                               dummy=None,
                                               delta_dummy=None,
                                               allow_pos0_neg=True,
-                                              mask=mask,
-                                              # dark=dark,
-                                              # flat=flat,
-                                              # solidangle=solidangle,
-                                              # polarization=polarization,
-                                              # normalization_factor=normalization_factor,
-                                              # chiDiscAtPi=self.chiDiscAtPi,
-                                              # empty=dummy if dummy is not None else self._empty
+                                              mask=np.logical_not(mask),
+                                              #dark=dark,
+                                              #flat=flat,
+                                              #solidangle=solidangle,
+                                              #polarization=polarization,
+                                              #normalization_factor=normalization_factor,
+                                              #chiDiscAtPi=self.chiDiscAtPi,
                                               )
     return I, q_y, q_z
 
