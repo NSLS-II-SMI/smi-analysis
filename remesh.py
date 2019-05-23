@@ -3,9 +3,10 @@ from pyFAI.ext import splitBBox
 
 def remesh_gi(data, ai, npt=None, q_h_range=None, q_v_range=None, method='splitbbox', mask=None):
     """
-    Remeshing Grazing-Incidence configuration using pyGIX
+    Redraw the Grazing-Incidence image in (qp, qz) coordinates using pyGIX
 
-    Args:
+    Parameters:
+    -----------
     :param data: 2D image in pixel
     :type data: numpy 2D array of float
     :param ai: pyGIX transform operator
@@ -48,7 +49,7 @@ def phi(x, y, z):
     return np.arctan2(x, np.sqrt(y ** 2 + z ** 2))
 
 
-def remesh_transmission(image, ai, bins, q_h_range, q_v_range, out_range=None, coord_sys='qp_qz', mask=None):
+def remesh_transmission(image, ai, bins=None, q_h_range=None, q_v_range=None, out_range=None, coord_sys='qp_qz', mask=None):
     """
     Redraw the Transmission image in (qp, qz) coordinates using pyFAI splitBBox.histoBBox2d method
 
