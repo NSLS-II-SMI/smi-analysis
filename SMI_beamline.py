@@ -7,10 +7,6 @@ import numpy as np
 import copy
 
 class SMI_geometry():
-    #TODO: This is a tool for stitching => only handle several file for different WAXS/GIWAXS images
-    # Create a list of bs position
-    # Create a detector angle list: HOW?
-
     def __init__(self,
                  geometry,
                  sdd,
@@ -27,7 +23,7 @@ class SMI_geometry():
         self.geometry = geometry
         self.alphai = alphai
         self.center = center
-        self.bs = bs
+        self.bs = [bs]
         self.geometry = geometry
         self.detector = detector
 
@@ -35,6 +31,7 @@ class SMI_geometry():
         self.det_angle_step = det_angle_step
 
         self.ai = []
+        self.mask = []
 
         self.define_detector()
 
@@ -43,27 +40,28 @@ class SMI_geometry():
     def define_detector(self):
         if self.detector == 'Pilatus1m':
             self.det = Detector.Pilatus1M_SMI()
-            self.mask = self.det.calc_mask(bs=self.bs)
 
         elif self.detector == 'Pilatus300kw':
             self.det = Detector.VerticalPilatus300kw()
-            self.mask = self.det.calc_mask(bs=self.bs)
 
         elif self.detector == 'rayonix':
             self.det = Detector.Rayonix()
-            self.mask = self.det.calc_mask()
 
         else:
             raise Exception('Unknown detector for SMI')
 
-    #TODO: take care of the mask here: each image should have it own mask
-    #TODO: that will help for multigeometry and also it will help for the new motorize beamstop
     def open_data(self, path, lst_img):
         if self.detector == None:
             self.define_detector()
 
         self.imgs = []
-        for img in lst_img:
+
+        if len(lst_img) != len(self.bs):
+            self.bs = self.bs + [[0,0]]*(len(lst_img) - len(self.bs))
+
+        for img, bs in zip(lst_img, self.bs):
+            self.mask.append(self.det.calc_mask(bs=bs))
+
             if self.detector == 'Pilatus1m':
                 self.imgs.append(fabio.open(os.path.join(path, img)).data)
 
@@ -79,20 +77,21 @@ class SMI_geometry():
 
         ai.setFit2D(self.sdd, self.center[0], self.center[1])
         ai.set_wavelength(self.wav)
-        ai.set_mask(self.mask)
 
-        for det_rot in det_rots:
-            ai.set_rot1(det_rot)
-            self.ai.append(copy.deepcopy(ai))
+        for i, det_rot in enumerate(det_rots):
+            ai_temp = copy.deepcopy(ai)
+            ai_temp.set_mask(self.mask[i])
+            ai_temp.set_rot1(det_rot)
+            self.ai.append(ai_temp)
 
     def calculate_integrator_gi(self, det_rots):
         ai = Transform(wavelength=self.wav, detector=self.det, incident_angle=self.alphai)
         ai.setFit2D(directDist= self.sdd, centerX=self.center[0], centerY=self.center[1])
         ai.set_incident_angle(self.alphai)
-        ai.set_mask(self.mask)
 
         for i, det_rot in enumerate(det_rots):
             ai_temp = copy.deepcopy(ai)
+            ai_temp.set_mask(self.mask[i])
             ai_temp.set_rot1(det_rot)
             ai_temp.set_incident_angle(self.alphai)
             self.ai.append(ai_temp)
@@ -198,7 +197,7 @@ class SMI_geometry():
 
             self.q_ver, self.I_ver = integrate1D.integrate_qper_gisaxs(self.imgs,
                                                                        self.ai,
-                                                                       npt=2000,
+                                                                       npt=200,
                                                                        ip_pos=ip_pos,
                                                                        ip_width=ip_width,
                                                                        op_range=op_range)
