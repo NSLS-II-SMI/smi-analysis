@@ -4,9 +4,13 @@ import Detector, stitch, integrate1D
 import os
 import fabio
 import numpy as np
+import copy
 
-#TODO: What to do with Angular step and initial angle
 class SMI_geometry():
+    #TODO: This is a tool for stitching => only handle several file for different WAXS/GIWAXS images
+    # Create a list of bs position
+    # Create a detector angle list: HOW?
+
     def __init__(self,
                  geometry,
                  sdd,
@@ -52,7 +56,8 @@ class SMI_geometry():
         else:
             raise Exception('Unknown detector for SMI')
 
-
+    #TODO: take care of the mask here: each image should have it own mask
+    #TODO: that will help for multigeometry and also it will help for the new motorize beamstop
     def open_data(self, path, lst_img):
         if self.detector == None:
             self.define_detector()
@@ -64,6 +69,7 @@ class SMI_geometry():
 
             elif self.detector == 'Pilatus300kw':
                 self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1))
+
 
     def calculate_integrator_trans(self, det_rots):
         ai = azimuthalIntegrator.AzimuthalIntegrator(**{'detector': self.det,
@@ -77,9 +83,7 @@ class SMI_geometry():
 
         for det_rot in det_rots:
             ai.set_rot1(det_rot)
-            self.ai.append(ai)
-
-
+            self.ai.append(copy.deepcopy(ai))
 
     def calculate_integrator_gi(self, det_rots):
         ai = Transform(wavelength=self.wav, detector=self.det, incident_angle=self.alphai)
@@ -87,38 +91,32 @@ class SMI_geometry():
         ai.set_incident_angle(self.alphai)
         ai.set_mask(self.mask)
 
-        for det_rot in det_rots:
-            ai.set_rot1(det_rot)
-            self.ai.append(ai)
+        for i, det_rot in enumerate(det_rots):
+            ai_temp = copy.deepcopy(ai)
+            ai_temp.set_rot1(det_rot)
+            ai_temp.set_incident_angle(self.alphai)
+            self.ai.append(ai_temp)
 
     def stitching_data(self):
         self.ai = []
         self.img_st, self.qp, self.qz = [], [], []
 
-        if self.geometry == 'Transmission':
-            if self.ai == []:
-                det_rot = [self.det_ini_angle + i * self.det_angle_step for i in range(0, len(self.imgs), 1)]
+        if self.ai == []:
+            det_rot = [self.det_ini_angle + i * self.det_angle_step for i in range(0, len(self.imgs), 1)]
+            if self.geometry == 'Transmission':
                 self.calculate_integrator_trans(det_rot)
 
-            self.img_st, self.qp, self.qz = stitch.stitching_waxs(self.imgs,
-                                                                  self.ai)
-
-
-        elif self.geometry== 'Reflection':
-            if self.ai == []:
-                det_rot = [self.det_ini_angle + i * self.det_angle_step for i in range(0, len(self.imgs), 1)]
+            elif self.geometry == 'Reflection':
                 self.calculate_integrator_gi(det_rot)
 
-            self.img_st, self.qp, self.qz = stitch.stitching_giwaxs(self.imgs,
-                                                                    self.ai)
+            else:
+                raise Exception('Unknown geometry')
 
-        else:
-            raise Exception('Unknown geometry')
+        self.img_st, self.qp, self.qz = stitch.stitching(self.imgs,
+                                                         self.ai,
+                                                         self.geometry)
 
 
-
-
-    #TODO: Start playing with pygix for 1D cuts and radial, azimuthal averaging
     def radial_averaging(self, npt = 2000):
         self.q_rad, self.I_rad = [], []
         if self.geometry == 'Transmission':
@@ -154,7 +152,7 @@ class SMI_geometry():
             self.q_azi, self.I_azi = integrate1D.integrate_azi_saxs(self.imgs,
                                                                     self.ai)
 
-
+        #TODO: Play with data which will make sense
         elif self.geometry== 'Reflection':
             if self.ai == []:
                 det_rot = [self.det_ini_angle + i * self.det_angle_step for i in range(0, len(self.imgs), 1)]
@@ -187,6 +185,7 @@ class SMI_geometry():
             raise Exception('Unknown geometry')
 
 
+    #TODO: Test op_box method => not working so far
     def vertical_integration(self, ip_pos=0.0, ip_width=30.0, op_range=None):
         self.q_ver, self.I_ver = [], []
         if self.geometry == 'Transmission':
