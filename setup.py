@@ -10,13 +10,3 @@ setup(
     author_email='gfreychet@gmail.com',
     description=''
 )
-
-
-
-install_requires=['scipy', 'Cython', 'pyFAI==0.16.0', 'h5py', 'PySide==1.2.2', 'pyqtgraph', 'QDarkStyle',
-
-                      'Pillow', 'pyfits', 'PyOpenGL', 'PyYAML', 'qtconsole','tifffile','pysftp',
-
-                      'requests','dask','distributed','appdirs','futures','scikit-image','imageio','vispy',
-
-                      'pypaws>=0.8.4','matplotlib', 'astropy'],
