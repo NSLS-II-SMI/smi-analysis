@@ -28,26 +28,9 @@ def remesh_gi(data, ai, npt=None, q_h_range=None, q_v_range=None, method='splitb
                                                 ip_range=q_h_range,
                                                 op_range=q_v_range,
                                                 method=method,
-                                                mask=np.logical_not(mask))
+                                                mask=mask)
 
     return img, q_par, q_ver
-
-
-def q_from_angles(phi, alpha, wavelength):
-    r = 2 * np.pi / wavelength
-    qx = r * np.sin(phi) * np.cos(alpha)
-    qy = r * np.cos(phi) * np.sin(alpha)
-    qz = r * (np.cos(phi) * np.cos(alpha) - 1)
-    return np.array([qx, qy, qz])
-
-
-def alpha(x, y, z):
-    return np.arctan2(y, np.sqrt(x ** 2 + z ** 2))
-
-
-def phi(x, y, z):
-    return np.arctan2(x, np.sqrt(y ** 2 + z ** 2))
-
 
 def remesh_transmission(image, ai, bins=None, q_h_range=None, q_v_range=None, out_range=None, coord_sys='qp_qz', mask=None):
     """
@@ -101,16 +84,28 @@ def remesh_transmission(image, ai, bins=None, q_h_range=None, q_v_range=None, ou
                                               dummy=None,
                                               delta_dummy=None,
                                               allow_pos0_neg=True,
-                                              mask=np.logical_not(mask),
+                                              mask=mask,
                                               #dark=dark,
                                               #flat=flat,
                                               #solidangle=solidangle,
                                               #polarization=polarization,
                                               #normalization_factor=normalization_factor,
-                                              #chiDiscAtPi=self.chiDiscAtPi,
+                                              chiDiscAtPi=1,
                                               )
     return I, q_y, q_z
 
+def q_from_angles(phi, alpha, wavelength):
+    r = 2 * np.pi / wavelength
+    qx = r * np.sin(phi) * np.cos(alpha)
+    qy = r * np.cos(phi) * np.sin(alpha)
+    qz = r * (np.cos(phi) * np.cos(alpha) - 1)
+    return np.array([qx, qy, qz])
 
 
+def alpha(x, y, z):
+    return np.arctan2(y, np.sqrt(x ** 2 + z ** 2))
+
+
+def phi(x, y, z):
+    return np.arctan2(x, np.sqrt(y ** 2 + z ** 2))
 

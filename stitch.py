@@ -1,7 +1,7 @@
 import numpy as np
 import remesh
 
-def stitching(datas, ais, geometry ='Reflection'):
+def stitching(datas, ais, masks, geometry ='Reflection'):
     '''
     Remeshing in q-space the 2D image collected by the pixel detector and stitching together images at different detector position (if several images)
 
@@ -15,9 +15,9 @@ def stitching(datas, ais, geometry ='Reflection'):
     :type geometry: string
     '''
 
-    for i, (data, ai) in enumerate(zip(datas, ais)):
+    for i, (data, ai, mask) in enumerate(zip(datas, ais, masks)):
         if geometry == 'Reflection':
-            img, x, y = remesh.remesh_gi(data, ai, method='splitbbox', mask=ai.mask)
+            img, x, y = remesh.remesh_gi(data, ai, method='splitbbox', mask=mask)
             if i == 0:
                 q_p_ini, q_z_ini = np.zeros((np.shape(x)[0], len(datas))), np.zeros((np.shape(y)[0], len(datas)))
             q_p_ini[:len(x), i] = -x[::-1]
@@ -25,7 +25,7 @@ def stitching(datas, ais, geometry ='Reflection'):
 
 
         elif geometry == 'Transmission':
-            img, x, y = remesh.remesh_transmission(data, ai, mask=ai.mask)
+            img, x, y = remesh.remesh_transmission(data, ai, mask=mask)
             if i == 0:
                 q_p_ini, q_z_ini = np.zeros((np.shape(x)[0], len(datas))), np.zeros((np.shape(y)[0], len(datas)))
             q_p_ini[:len(x), i] = x
@@ -40,7 +40,7 @@ def stitching(datas, ais, geometry ='Reflection'):
     qz_remesh = np.linspace(min(q_z_ini[:, 0]), max(q_z_ini[:, -1]), int(
         (nb_point + 1) * abs(max(q_z_ini[:, -1]) - min(q_z_ini[:, 0])) / abs(max(q_p_ini[:, -1]) - min(q_p_ini[:, 0]))))
 
-    for i, (data, ai) in enumerate(zip(datas, ais)):
+    for i, (data, ai, mask) in enumerate(zip(datas, ais, masks)):
         qp_start = np.argmin(abs(qp_remesh - np.min(q_p_ini[:, i])))
         qp_stop = np.argmin(abs(qp_remesh - np.max(q_p_ini[:, i])))
         npt = (np.int(1 + qp_stop - qp_start), np.int(np.shape(qz_remesh)[0]))
@@ -48,14 +48,14 @@ def stitching(datas, ais, geometry ='Reflection'):
         if geometry == 'Reflection':
             ip_range = (-qp_remesh[qp_start], -qp_remesh[qp_stop])
             op_range = (qz_remesh[0], qz_remesh[-1])
-            img, x, y = remesh.remesh_gi(data, ai, npt=npt, q_h_range=ip_range, q_v_range=op_range, method='splitbbox', mask=ai.mask)
+            img, x, y = remesh.remesh_gi(data, ai, npt=npt, q_h_range=ip_range, q_v_range=op_range, method='splitbbox', mask=mask)
             qimage = np.rot90(img, 2)
             qp, qz = -x[::-1], y[::-1]
 
         elif geometry == 'Transmission':
             ip_range = (qp_remesh[qp_start], qp_remesh[qp_stop])
             op_range = (qz_remesh[0], qz_remesh[-1])
-            qimage, x, y = remesh.remesh_transmission(data, ai, bins=npt, q_h_range=ip_range, q_v_range=op_range, mask=ai.mask)
+            qimage, x, y = remesh.remesh_transmission(data, ai, bins=npt, q_h_range=ip_range, q_v_range=op_range, mask=mask)
 
 
         if i == 0:

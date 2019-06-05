@@ -17,9 +17,12 @@ class Pilatus1M_SMI(Pilatus1M):
         mask[870, 544], mask[871, 545], mask[871, 546], mask[871, 547] = False, False, False, False
 
         #Beamstop
-        mask[bs[0] + 40:, bs[1] - 11:bs[1] + 11] = False
-        mask[bs[0]:bs[0] + 40, bs[1] - 22:bs[1] + 22] = False
-        return mask
+        if bs == [0, 0]:
+            return np.logical_not(mask)
+        else:
+            mask[bs[0] + 40:, bs[1] - 11:bs[1] + 11] = False
+            mask[bs[0]:bs[0] + 40, bs[1] - 22:bs[1] + 22] = False
+            return np.logical_not(mask)
 
 
 class VerticalPilatus300kw(Pilatus300kw):
@@ -30,6 +33,10 @@ class VerticalPilatus300kw(Pilatus300kw):
 
     def calc_mask(self, bs):
         mask = np.rot90(np.logical_not(detectors.Pilatus300kw().calc_mask()), 1)
+
+        #border of the detector and chips
+        mask[:, :5], mask[:, -5:], mask[:5, :], mask[-5:, :] = False, False, False, False
+        mask[486, :], mask[494, :], mask[980, :], mask[988, :]= False, False, False, False
 
         #Dead pixel
         dead_pix_x = [228, 307, 733, 733, 792, 1211, 1211, 1231, 1232, 1276, 1321, 1366, 1405, 1467]
@@ -45,9 +52,11 @@ class VerticalPilatus300kw(Pilatus300kw):
         mask[674, 133], mask[674, 134], mask[1130, 20], mask[1239, 50] = False, False, False, False
 
         #Beamstop
-        mask[bs[0]:, bs[1] - 11:bs[1] + 11] = False
-
-        return mask
+        if bs == [0, 0]:
+            return np.logical_not(mask)
+        else:
+            mask[bs[0]:, bs[1] - 8 : bs[1] + 8] = False
+            return np.logical_not(mask)
 
 
 # TODO: define rayonix class
@@ -58,5 +67,5 @@ class Rayonix(Pilatus300kw):
     aliases = ["Pilatus 300kw (Vertical)"]
 
     def calc_mask(self, pixel_bs):
-        mask = 0
-        return mask
+        mask = False
+        return np.logical_not(mask)
