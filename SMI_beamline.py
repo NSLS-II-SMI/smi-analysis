@@ -24,7 +24,10 @@ class SMI_geometry():
         self.geometry = geometry
         self.alphai = alphai
         self.center = center
-        self.bs = [bs]
+        if len(bs) ==2:
+            self.bs = [bs]
+        else:
+            self.bs = bs
         self.geometry = geometry
         self.detector = detector
 
