@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name='SMI_analysis',
     version='1.0',
-    packages=['SMI_beamline', 'integrate1D', 'remesh', 'stitch'],
+    py_modules=['SMI_beamline', 'remesh', 'stitch', 'integrate1D'],
     url='',
     license='',
     author='gfreychet',
