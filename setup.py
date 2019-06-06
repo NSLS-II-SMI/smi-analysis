@@ -1,12 +1,12 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='SMI_analysis',
     version='1.0',
-    packages=[],#'numpy', 'fabio', 'pyFAI', 'git+https://github.com/ronpandolfi/pygix.git'
+    packages=['SMI_beamline', 'integrate1D', 'remesh', 'stitch'],
     url='',
     license='',
     author='gfreychet',
     author_email='gfreychet@gmail.com',
-    description=''
+    description='SMI analysis tools'
 )
