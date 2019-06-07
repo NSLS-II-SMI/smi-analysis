@@ -8,7 +8,7 @@ import SMI_beamline
 
 if __name__ == '__main__':
 
-    geometry = 'Reflection'
+    geometry = 'inpaint'
     if geometry == 'Transmission':
         #coming from the document:
         geometry, sdd, wav, alphai, center, bs_pos, detector = 'Transmission', 273.9, 1E-10 * (12.39842/16.1), np.deg2rad(0.0), [96., 1475-88], [1275, 95], 'Pilatus300kw'
