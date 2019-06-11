@@ -2,6 +2,18 @@ import numpy as np
 from pyFAI.multi_geometry import MultiGeometry
 
 def inpaint_saxs(imgs, ais, masks):
+    '''
+    Inpaint the 2D image collected by the pixel detector to remove artifacts in later data reduction
+
+    Parameters:
+    -----------
+    :param imgs: List of 2D image in pixel
+    :type datas: ndarray
+    :param ais: List of AzimuthalIntegrator/Transform generated using pyGIX/pyFAI which contain the information about the experiment geometry
+    :type ais: list of AzimuthalIntegrator / TransformIntegrator
+    :param masks: List of 2D image (same dimension as imgs)
+    :type masks: ndarray
+    '''
     inpaints, mask_inpaints = [], []
     for i, (img, ai, mask) in enumerate(zip(imgs, ais, masks)):
         inpaints.append(ai.inpainting(img.copy(order='C'), mask))
@@ -10,7 +22,28 @@ def inpaint_saxs(imgs, ais, masks):
     return inpaints, mask_inpaints
 
 
+
 def cake_saxs(inpaints, ais, masks, radial_range=(0, 60), azimuth_range=(-90, 90), npt_rad=250, npt_azim=250):
+    '''
+    Unwrapp the stitched image from q-space to 2theta-Chi space (Radial-Azimuthal angle)
+
+    Parameters:
+    -----------
+    :param inpaints: List of 2D inpainted images
+    :type inpaints: List of ndarray
+    :param ais: List of AzimuthalIntegrator/Transform generated using pyGIX/pyFAI which contain the information about the experiment geometry
+    :type ais: list of AzimuthalIntegrator / TransformIntegrator
+    :param masks: List of 2D image (same dimension as inpaints)
+    :type masks: List of ndarray
+    :param radial_range: minimum and maximum of the radial range in degree
+    :type radial_range: Tuple
+    :param azimuth_range: minimum and maximum of the 2th range in degree
+    :type azimuth_range: Tuple
+    :param npt_rad: number of point in the radial range
+    :type npt_rad: int
+    :param npt_rad: number of point in the azimuthal range
+    :type npt_rad: int
+    '''
     mg = MultiGeometry(ais,
                        unit='2th_deg',
                        radial_range=radial_range,
@@ -29,6 +62,25 @@ def cake_saxs(inpaints, ais, masks, radial_range=(0, 60), azimuth_range=(-90, 90
 
 
 def integrate_rad_saxs(inpaints, ais, masks, radial_range=(0, 40), azimuth_range=(-90, 0), npt=2000):
+    '''
+    Radial integration of transmission data using the pyFAI multigeometry module
+
+    Parameters:
+    -----------
+    :param inpaints: List of 2D inpainted images
+    :type inpaints: List of ndarray
+    :param ais: List of AzimuthalIntegrator/Transform generated using pyGIX/pyFAI which contain the information about the experiment geometry
+    :type ais: list of AzimuthalIntegrator / TransformIntegrator
+    :param masks: List of 2D image (same dimension as inpaints)
+    :type masks: List of ndarray
+    :param radial_range: minimum and maximum of the radial range in degree
+    :type radial_range: Tuple
+    :param azimuth_range: minimum and maximum of the 2th range in degree
+    :type azimuth_range: Tuple
+    :param npt: number of point of the final 1D profile
+    :type npt: int
+    '''
+
     mg = MultiGeometry(ais,
                        unit='2th_deg',
                        radial_range=radial_range,
@@ -48,6 +100,22 @@ def integrate_rad_saxs(inpaints, ais, masks, radial_range=(0, 40), azimuth_range
 
 
 def integrate_azi_saxs(cake, tth_array, chi_array, radial_range=(0, 10), azimuth_range=(-90, 0)):
+    '''
+    Azimuthal integration of transmission data using masked array on a caked images (image in 2-theta_chi space)
+
+    Parameters:
+    -----------
+    :param cake: 2D array unwrapped in 2th-chi space
+    :type cake: ndarray (same dimension as tth_array and chiarray)
+    :param tth_array: 2D array containing 2th angles of each pixel
+    :type tth_array: ndarray (same dimension as cake and chiarray)
+    :param chi_array: 2D array containing chi angles of each pixel
+    :type chi_array: ndarray (same dimension as cake and tth_array)
+    :param radial_range: minimum and maximum of the radial range in degree
+    :type radial_range: Tuple
+    :param azimuth_range: minimum and maximum of the 2th range in degree
+    :type azimuth_range: Tuple
+    '''
     tth_mesh, chi_mesh = np.meshgrid(tth_array, chi_array)
     cake_mask = np.ma.masked_array(cake)
 
@@ -62,7 +130,93 @@ def integrate_azi_saxs(cake, tth_array, chi_array, radial_range=(0, 10), azimuth
 
 
 
-#TODO: Test the units
+
+
+
+
+
+
+
+def integrate_qpar_gisaxs(q_par, q_per, img, q_par_range=None, q_per_range=None):
+    '''
+    Horizontal integration of a 2D array using masked array
+
+    Parameters:
+    -----------
+    :param q_par: minimum and maximum q_par (in A-1) of the input image
+    :type q_par: Tuple
+    :param q_per: minimum and maximum of q_par in A-1
+    :type q_per: Tuple
+    :param img: 2D array containing intensity
+    :type img: ndarray
+    :param q_par_range: q_par range (in A-1) at the which the integration will be done
+    :type q_par_range: Tuple
+    :param q_per_range: q_per range (in A-1) at the which the integration will be done
+    :type q_per_range: Tuple
+    '''
+
+    if q_par_range is None: q_par_range = (np.asarray(q_par).min(), np.asarray(q_par).max())
+    if q_per_range is None: q_per_range = (np.asarray(q_per).min(), np.asarray(q_per).max())
+
+    q_par = np.linspace(q_par[0], q_par[1], np.shape(img)[1])
+    q_per = np.linspace(q_per[0], q_per[1], np.shape(img)[0])[::-1]
+
+    qpar_mesh, qper_mesh = np.meshgrid(q_par, q_per)
+    img_mask = np.ma.masked_array(img, mask= img==0)
+
+    img_mask = np.ma.masked_where( qper_mesh < q_per_range[0], img_mask)
+    img_mask = np.ma.masked_where( qper_mesh > q_per_range[1], img_mask)
+
+    img_mask = np.ma.masked_where(q_par_range[0] > qpar_mesh, img_mask)
+    img_mask = np.ma.masked_where(q_par_range[1] < qpar_mesh , img_mask)
+
+    I_par = np.sum(img_mask, axis=0)
+
+    return q_par, I_par
+
+
+def integrate_qper_gisaxs(q_par, q_per, img, q_par_range=None, q_per_range=None):
+    '''
+    Vertical integration of a 2D array using masked array
+
+    Parameters:
+    -----------
+    :param q_par: minimum and maximum q_par (in A-1) of the input image
+    :type q_par: Tuple
+    :param q_per: minimum and maximum of q_par in A-1
+    :type q_per: Tuple
+    :param img: 2D array containing intensity
+    :type img: ndarray
+    :param q_par_range: q_par range (in A-1) at the which the integration will be done
+    :type q_par_range: Tuple
+    :param q_per_range: q_per range (in A-1) at the which the integration will be done
+    :type q_per_range: Tuple
+    '''
+    if q_par_range is None: q_par_range = (np.asarray(q_par).min(), np.asarray(q_par).max())
+    if q_per_range is None: q_per_range = (np.asarray(q_per).min(), np.asarray(q_per).max())
+
+    q_par = np.linspace(q_par[0], q_par[1], np.shape(img)[1])
+    q_per = np.linspace(q_per[0], q_per[1], np.shape(img)[0])[::-1]
+    q_par_mesh, q_per_mesh = np.meshgrid(q_par, q_per)
+    img_mask = np.ma.masked_array(img, mask= img==0)
+
+    img_mask = np.ma.masked_where(q_per_mesh < q_per_range[0], img_mask)
+    img_mask = np.ma.masked_where(q_per_mesh > q_per_range[1], img_mask)
+
+    img_mask = np.ma.masked_where(q_par_mesh < q_par_range[0], img_mask)
+    img_mask = np.ma.masked_where(q_par_mesh > q_par_range[1], img_mask)
+
+    I_per = np.sum(img_mask, axis=1)
+
+    return q_per, I_per
+
+
+
+
+
+
+
+#TODO: Implement with a Histo method from pyFAI on the remeshed array
 def integrate_rad_gisaxs(imgs, ais, masks, npt = 2000, radial_range=None, azimuth_range=None):
     q_rads, I_rads  = [], []
 
@@ -107,96 +261,53 @@ def integrate_azi_gisaxs(imgs, ais, masks, npt = 2000, radial_pos=None, radial_w
         I_azis.append(I_azi)
     return q_azis, I_azis
 
-def integrate_qpar_gisaxs(q_par, q_per, img, q_per_range=None, q_par_range=None):
-
-    if q_per_range is None: q_per_range = (np.asarray(q_per).min(), np.asarray(q_per).max())
-    if q_par_range is None: q_par_range = (np.asarray(q_par).min(), np.asarray(q_par).max())
-
-    q_par = np.linspace(q_par[0], q_par[1], np.shape(img)[1])
-    q_per = np.linspace(q_per[0], q_per[1], np.shape(img)[0])[::-1]
-
-    qpar_mesh, qper_mesh = np.meshgrid(q_par, q_per)
-    img_mask = np.ma.masked_array(img, mask= img==0)
-
-    img_mask = np.ma.masked_where( qper_mesh < q_per_range[0], img_mask)
-    img_mask = np.ma.masked_where( qper_mesh > q_per_range[1], img_mask)
-
-    img_mask = np.ma.masked_where(q_par_range[0] > qpar_mesh, img_mask)
-    img_mask = np.ma.masked_where(q_par_range[1] < qpar_mesh , img_mask)
-
-    I_par = np.sum(img_mask, axis=0)
-
-    return q_par, I_par
-
-
-def integrate_qper_gisaxs(q_par, q_per, img, q_per_range=None, q_par_range=None):
-    if q_per_range is None: q_per_range = (np.asarray(q_per).min(), np.asarray(q_per).max())
-    if q_par_range is None: q_par_range = (np.asarray(q_par).min(), np.asarray(q_par).max())
-
-    q_par = np.linspace(q_par[0], q_par[1], np.shape(img)[1])
-    q_per = np.linspace(q_per[0], q_per[1], np.shape(img)[0])[::-1]
-    q_par_mesh, q_per_mesh = np.meshgrid(q_par, q_per)
-    img_mask = np.ma.masked_array(img, mask= img==0)
-
-    img_mask = np.ma.masked_where(q_per_mesh < q_per_range[0], img_mask)
-    img_mask = np.ma.masked_where(q_per_mesh > q_per_range[1], img_mask)
-
-    img_mask = np.ma.masked_where(q_par_mesh < q_par_range[0], img_mask)
-    img_mask = np.ma.masked_where(q_par_mesh > q_par_range[1], img_mask)
-
-    I_per = np.sum(img_mask, axis=1)
-
-    return q_per, I_per
-
-
-#TODO: Implement the pygix function
-def integrate_qpar_gisaxs_pygix(imgs, ais, npt=2000, op_pos=0.0, op_width=30.0, ip_range=None):
-    q_pars, I_pars = [], []
-    for i, (img, ai) in enumerate(zip(imgs, ais)):
-        I_par, q_par = ai.profile_ip_box(data=img,
-                                         npt=npt,
-                                         correctSolidAngle=False,
-                                         variance=None,
-                                         error_model=None,
-                                         op_pos=op_pos,
-                                         op_width=op_width,
-                                         ip_range=ip_range,
-                                         mask=np.logical_not(ai.mask),
-                                         polarization_factor=None,
-                                         method="splitpix",
-                                         #unit=grazing_units.Q,
-                                         normalization_factor=1.)
-
-        q_pars.append(q_par)
-        I_pars.append(I_par)
-
-    return q_pars, I_pars
-
-
-def integrate_qper_gisaxs_pygix(imgs, ais, npt= 2000, ip_pos=0.0, ip_width=30.0, op_range=None):
-    q_pers, I_pers = [], []
-
-    for i, (img, ai) in enumerate(zip(imgs, ais)):
-        I_per, q_per = ai.profile_op_box(data=img,
-                                         npt=npt,
-                                         correctSolidAngle=False,
-                                         variance=None,
-                                         error_model=None,
-                                         ip_pos=ip_pos,
-                                         ip_width=ip_width,
-                                         op_range=op_range,
-                                         mask=np.logical_not(ai.mask),
-                                         polarization_factor=None,
-                                         method="splitpix",
-                                         # unit=grazing_units.Q,
-                                         normalization_factor=1.)
-
-        q_pers.append(q_per)
-        I_pers.append(I_per)
-    return q_pers, I_pers
 
 
 from pyFAI.ext import splitBBox
+
+def integrate_rad_gisaxs_1(q_par, q_per, img, bins = 1000, q_h_range=None, q_v_range=None):
+    img_mask = np.ma.masked_array(img, mask=img == 0)
+
+    '''
+    import matplotlib.pyplot as plt
+    plt.figure()
+    plt.subplot(121)
+    plt.imshow(img, vmin = 0, vmax = np.percentile(img, 95))
+    plt.subplot(122)
+    plt.imshow(img_mask, vmin = 0, vmax = np.percentile(img_mask, 95))
+    plt.show()
+    '''
+
+    print(img_mask.mask)
+
+    #recalculate the q-range here
+    q_h = np.linspace(q_par[0], q_par[-1], np.shape(img)[1])
+    q_v = np.linspace(q_per[0], q_per[-1], np.shape(img)[0])
+
+    bins = tuple(reversed(img.shape))
+    if q_h_range is None: q_h_range = (0, q_h.max())
+    if q_v_range is None: q_v_range = (0, q_v.max())
+
+    q_h_te, q_v_te = np.meshgrid(q_h, q_v)
+
+    q, I, _, _= splitBBox.histoBBox1d(img,
+                                 pos0=q_h_te,
+                                 delta_pos0=np.ones_like(img) * (q_h_range[1] - q_h_range[0]) / bins[0],
+                                 pos1=q_v_te,
+                                 delta_pos1=np.ones_like(img) * (q_v_range[1] - q_v_range[0]) / bins[1],
+                                 bins=2000,
+                                 pos0Range=q_h_range,
+                                 pos1Range=q_v_range,
+                                 #dark=None,
+                                 #flat=None,
+                                 #solidangle=None,
+                                 #polarization=None,
+                                 #normalization_factor=1.0,
+                                 mask=img_mask.mask
+                                 )
+
+
+    return q, I
 
 def rad_st_data(img_st, q_h, q_v, bins = None, q_h_range=None, q_v_range=None):
     """
@@ -234,7 +345,6 @@ def rad_st_data(img_st, q_h, q_v, bins = None, q_h_range=None, q_v_range=None):
 
     mask = threshold_mask(img_st, 500)
 
-
     #recalculate the q-range here
     q_h = np.linspace(q_h[0], q_h[-1], np.shape(img_st)[1])
     q_v = np.linspace(q_v[0], q_v[-1], np.shape(img_st)[0])
@@ -267,29 +377,3 @@ def rad_st_data(img_st, q_h, q_v, bins = None, q_h_range=None, q_v_range=None):
                                  )
 
     return q, I
-
-
-from silx.math import Histogramnd
-def rad_st_data_test(img_st, q_h, q_v, range= None, bins = None):
-
-    print('shape', np.shape(img_st))
-    #recalculate the q-range here
-    q_h = np.linspace(q_h[0], q_h[-1], np.shape(img_st)[1])
-    q_v = np.linspace(q_v[0], q_v[-1], np.shape(img_st)[0])
-
-    q_h_te, q_v_te = np.meshgrid(q_h, q_v)
-    sample = np.asarray([q_h_te.ravel(), q_v_te.ravel()]).T
-    print('shapes', np.shape(sample))
-
-    if range is None: range = [[q_h[0], q_h[-1]], [q_v[0], q_v[-1]]]
-
-    if bins is None: bins = tuple(reversed(img_st.shape))
-
-
-    histo, w_histo, edges= Histogramnd(sample,
-                                       n_bins=200,
-                                       histo_range=range,
-                                       weights=img_st.ravel()
-                                       )
-
-    return histo[1], w_histo[1]
