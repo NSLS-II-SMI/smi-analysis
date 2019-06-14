@@ -38,6 +38,7 @@ class SMI_geometry():
         self.masks = []
         self.cake = []
         self.inpaints = []
+        self.img_st = []
 
         self.define_detector()
 
@@ -130,13 +131,15 @@ class SMI_geometry():
                                                                         npt_azim=npt_azim
                                                                         )
 
-
+    #TODO: add the angular range for the 1M
     def radial_averaging(self, radial_range=(0, 40), azimuth_range=(-90, 0), npt=2000):
         self.q_rad, self.tth_rad, self.I_rad = [], [], []
 
         if self.geometry == 'Transmission':
             if self.inpaints == []: self.inpainting()
             if self.detector == 'Pilatus300kw': radial_range = (0, 40); azimuth_range=(-90, 0)
+            #if self.detector == 'Pilatus1m': radial_range = (0, 40); azimuth_range=(-90, 0)
+
             self.q_rad, self.tth_rad, self.I_rad = integrate1D.integrate_rad_saxs(self.inpaints,
                                                                                   self.ai,
                                                                                   self.masks,
@@ -145,14 +148,17 @@ class SMI_geometry():
                                                                                   npt = npt
                                                                                   )
 
-        elif self.geometry== 'Reflection':
-            self.q_rad, self.I_rad = integrate1D.integrate_rad_gisaxs(self.imgs,
-                                                                      self.ai,
-                                                                      self.masks,
-                                                                      radial_range = None,
-                                                                      azimuth_range = None,
-                                                                      npt=npt
-                                                                      )
+        elif self.geometry == 'Reflection':
+            if self.img_st == []: self.stitching_data()
+            if self.detector == 'Pilatus300kw': radial_range = (0, self.qp[1]); azimuth_range=(0, self.qz[1])
+            #if self.detector == 'Pilatus1m': radial_range = (0, 40); azimuth_range=(-90, 0)
+
+            self.q_rad, self.I_rad = integrate1D.integrate_rad_gisaxs(self.qp,
+                                                                      self.qz,
+                                                                      self.img_st,
+                                                                      bins = npt,
+                                                                      q_par_range = radial_range,
+                                                                      q_per_range = azimuth_range)
 
         else:
             raise Exception('Unknown geometry')
@@ -188,19 +194,19 @@ class SMI_geometry():
     def horizonthal_integration(self, q_per_range=None, q_par_range=None):
         if self.img_st == []: self.stitching_data()
 
-        self.q_hor, self.I_hor = integrate1D.integrate_qpar_gisaxs(self.qp,
-                                                                   self.qz,
-                                                                   self.img_st,
-                                                                   q_per_range=q_per_range,
-                                                                   q_par_range=q_par_range,
-                                                                   )
+        self.q_hor, self.I_hor = integrate1D.integrate_qpar(self.qp,
+                                                            self.qz,
+                                                            self.img_st,
+                                                            q_par_range=q_par_range,
+                                                            q_per_range=q_per_range
+                                                            )
 
     def vertical_integration(self, q_per_range=None, q_par_range=None):
         if self.img_st == []: self.stitching_data()
 
-        self.q_ver, self.I_ver = integrate1D.integrate_qper_gisaxs(self.qp,
-                                                                   self.qz,
-                                                                   self.img_st,
-                                                                   q_per_range=q_per_range,
-                                                                   q_par_range=q_par_range,
-                                                                   )
+        self.q_ver, self.I_ver = integrate1D.integrate_qper(self.qp,
+                                                            self.qz,
+                                                            self.img_st,
+                                                            q_par_range=q_par_range,
+                                                            q_per_range=q_per_range
+                                                            )
