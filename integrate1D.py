@@ -176,7 +176,7 @@ def integrate_rad_gisaxs(q_par, q_per, img, bins = 1000, q_par_range=None, q_per
                                       pos1=q_v_te,
                                       delta_pos1=np.ones_like(img_mask) * (q_per[1] - q_per[0])/np.shape(img_mask)[0],
                                       bins=bins,
-                                      pos0Range=q_par,
+                                      pos0Range=np.array([np.min(tth_array), np.max(tth_array)]),
                                       pos1Range=q_per,
                                       dummy=None,
                                       delta_dummy=None,

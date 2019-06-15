@@ -132,13 +132,16 @@ class SMI_geometry():
                                                                         )
 
     #TODO: add the angular range for the 1M
-    def radial_averaging(self, radial_range=(0, 40), azimuth_range=(-90, 0), npt=2000):
+    def radial_averaging(self, radial_range=None, azimuth_range=None, npt=2000):
         self.q_rad, self.tth_rad, self.I_rad = [], [], []
 
         if self.geometry == 'Transmission':
             if self.inpaints == []: self.inpainting()
-            if self.detector == 'Pilatus300kw': radial_range = (0, 40); azimuth_range=(-90, 0)
-            #if self.detector == 'Pilatus1m': radial_range = (0, 40); azimuth_range=(-90, 0)
+            if radial_range is None and self.detector == 'Pilatus300kw': radial_range = (0, 40)
+            if azimuth_range is None and self.detector == 'Pilatus300kw': azimuth_range=(-90, 0)
+
+            if radial_range is None and self.detector == 'Pilatus1m': radial_range = (0, 40)
+            if azimuth_range is None and self.detector == 'Pilatus1m': azimuth_range=(-90, 0)
 
             self.q_rad, self.tth_rad, self.I_rad = integrate1D.integrate_rad_saxs(self.inpaints,
                                                                                   self.ai,
@@ -150,8 +153,11 @@ class SMI_geometry():
 
         elif self.geometry == 'Reflection':
             if self.img_st == []: self.stitching_data()
-            if self.detector == 'Pilatus300kw': radial_range = (0, self.qp[1]); azimuth_range=(0, self.qz[1])
-            #if self.detector == 'Pilatus1m': radial_range = (0, 40); azimuth_range=(-90, 0)
+            if radial_range is None and self.detector == 'Pilatus300kw': radial_range = (0, self.qp[1])
+            if azimuth_range is None and self.detector == 'Pilatus300kw': azimuth_range=(0, self.qz[1])
+
+            if radial_range is None and self.detector == 'Pilatus1m': radial_range = (0, self.qp[1])
+            if azimuth_range is None and self.detector == 'Pilatus1m': azimuth_range=(0, self.qz[1])
 
             self.q_rad, self.I_rad = integrate1D.integrate_rad_gisaxs(self.qp,
                                                                       self.qz,
