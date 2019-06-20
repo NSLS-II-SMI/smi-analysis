@@ -11,12 +11,13 @@ class SMI_geometry():
                  geometry,
                  sdd,
                  wav,
-                 alphai,
                  center,
-                 bs,
+                 bs_pos,
                  detector,
                  det_ini_angle,
-                 det_angle_step):
+                 det_angle_step,
+                 alphai=0,
+                 bs_kind = None):
 
         self.geometry = geometry
         self.sdd = sdd
@@ -24,10 +25,10 @@ class SMI_geometry():
         self.geometry = geometry
         self.alphai = alphai
         self.center = center
-        if len(bs) ==2:
-            self.bs = [bs]
+        if len(bs_pos) ==2:
+            self.bs = [bs_pos]
         else:
-            self.bs = bs
+            self.bs = bs_pos
         self.geometry = geometry
         self.detector = detector
 
@@ -39,6 +40,7 @@ class SMI_geometry():
         self.cake = []
         self.inpaints = []
         self.img_st = []
+        self.bs_kind = bs_kind
 
         self.define_detector()
 
@@ -59,7 +61,7 @@ class SMI_geometry():
         if len(lst_img) != len(self.bs): self.bs = self.bs + [[0,0]]*(len(lst_img) - len(self.bs))
 
         for img, bs in zip(lst_img, self.bs):
-            self.masks.append(self.det.calc_mask(bs=bs))
+            self.masks.append(self.det.calc_mask(bs=bs, bs_kind = self.bs_kind))
 
             if self.detector == 'Pilatus1m': self.imgs.append(fabio.open(os.path.join(path, img)).data)
             elif self.detector == 'Pilatus300kw': self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1))
@@ -120,9 +122,16 @@ class SMI_geometry():
                                                                      )
 
 
-    def caking(self, radial_range=(0, 40), azimuth_range=(-90, 0), npt_rad=500, npt_azim=500):
+    def caking(self, radial_range=None, azimuth_range=None, npt_rad=500, npt_azim=500):
         if self.inpaints == []: self.inpainting()
-        self.cake, self.tth_cake, self.chi_cake = integrate1D.cake_saxs(self.inpaints,
+        if self.img_st == []: self.stitching_data()
+        if radial_range is None and self.detector == 'Pilatus300kw': radial_range = (0.01, np.sqrt(self.qp[1]**2 + self.qz[1]**2))
+        if azimuth_range is None and self.detector == 'Pilatus300kw': azimuth_range = (-90, 0)
+
+        if radial_range is None and self.detector == 'Pilatus1m': radial_range =(0.01, np.sqrt(self.qp[1]**2 + self.qz[1]**2))
+        if azimuth_range is None and self.detector == 'Pilatus1m': azimuth_range=(-180, 180)
+
+        self.cake, self.q_cake, self.chi_cake = integrate1D.cake_saxs(self.inpaints,
                                                                         self.ai,
                                                                         self.mask_inpaints,
                                                                         radial_range=radial_range,
@@ -131,25 +140,25 @@ class SMI_geometry():
                                                                         npt_azim=npt_azim
                                                                         )
 
-    #TODO: add the angular range for the 1M
+
     def radial_averaging(self, radial_range=None, azimuth_range=None, npt=2000):
-        self.q_rad, self.tth_rad, self.I_rad = [], [], []
+        self.q_rad, self.I_rad = [], []
 
         if self.geometry == 'Transmission':
             if self.inpaints == []: self.inpainting()
-            if radial_range is None and self.detector == 'Pilatus300kw': radial_range = (0, 40)
+            if radial_range is None and self.detector == 'Pilatus300kw': radial_range = (0.01, np.sqrt(self.qp[1]**2 + self.qz[1]**2))
             if azimuth_range is None and self.detector == 'Pilatus300kw': azimuth_range=(-90, 0)
 
-            if radial_range is None and self.detector == 'Pilatus1m': radial_range = (0, 40)
-            if azimuth_range is None and self.detector == 'Pilatus1m': azimuth_range=(-90, 0)
+            if radial_range is None and self.detector == 'Pilatus1m': radial_range = (0.001, np.sqrt(self.qp[1]**2 + self.qz[1]**2))
+            if azimuth_range is None and self.detector == 'Pilatus1m': azimuth_range=(-180, 180)
 
-            self.q_rad, self.tth_rad, self.I_rad = integrate1D.integrate_rad_saxs(self.inpaints,
-                                                                                  self.ai,
-                                                                                  self.masks,
-                                                                                  radial_range = radial_range,
-                                                                                  azimuth_range = azimuth_range,
-                                                                                  npt = npt
-                                                                                  )
+            self.q_rad, self.I_rad = integrate1D.integrate_rad_saxs(self.inpaints,
+                                                                      self.ai,
+                                                                      self.masks,
+                                                                      radial_range = radial_range,
+                                                                      azimuth_range = azimuth_range,
+                                                                      npt = npt
+                                                                      )
 
         elif self.geometry == 'Reflection':
             if self.img_st == []: self.stitching_data()
@@ -170,10 +179,16 @@ class SMI_geometry():
             raise Exception('Unknown geometry')
 
 
-    def azimuthal_averaging(self, radial_range=(0, 40), azimuth_range=(-90, 0), npt_rad=500, npt_azim=500):
+    def azimuthal_averaging(self, radial_range=None, azimuth_range=None, npt_rad=500, npt_azim=500):
         self.q_azi, self.I_azi = [], []
         if self.geometry == 'Transmission':
             if self.inpaints == []: self.inpainting()
+            if radial_range is None and self.detector == 'Pilatus300kw': radial_range = (0.01, np.sqrt(self.qp[1]**2 + self.qz[1]**2))
+            if azimuth_range is None and self.detector == 'Pilatus300kw': azimuth_range=(-90, -1)
+
+            if radial_range is None and self.detector == 'Pilatus1m': radial_range = (0.001, np.sqrt(self.qp[1]**2 + self.qz[1]**2))
+            if azimuth_range is None and self.detector == 'Pilatus1m': azimuth_range=(-180, 180)
+
             if self.cake == []: self.caking(radial_range = radial_range,
                                             azimuth_range = azimuth_range,
                                             npt_rad=npt_rad,
@@ -181,7 +196,7 @@ class SMI_geometry():
                                             )
 
             self.chi_azi, self.I_azi = integrate1D.integrate_azi_saxs(self.cake,
-                                                                    self.tth_cake,
+                                                                    self.q_cake,
                                                                     self.chi_cake,
                                                                     radial_range=radial_range,
                                                                     azimuth_range=azimuth_range
@@ -197,7 +212,7 @@ class SMI_geometry():
             raise Exception('Unknown geometry')
 
 
-    def horizonthal_integration(self, q_per_range=None, q_par_range=None):
+    def horizontal_integration(self, q_per_range=None, q_par_range=None):
         if self.img_st == []: self.stitching_data()
 
         self.q_hor, self.I_hor = integrate1D.integrate_qpar(self.qp,
