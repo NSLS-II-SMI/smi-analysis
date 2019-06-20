@@ -97,8 +97,11 @@ def remesh_transmission(image, ai, bins=None, q_h_range=None, q_v_range=None, ou
 def q_from_angles(phi, alpha, wavelength):
     r = 2 * np.pi / wavelength
     qx = r * np.sin(phi) * np.cos(alpha)
-    qy = r * np.cos(phi) * np.sin(alpha)
-    qz = r * (np.cos(phi) * np.cos(alpha) - 1)
+    qy = r * np.sin(alpha)
+    qz = r * np.cos(alpha) * np.cos(alpha) - 1
+    #qx = r * np.sin(phi) * np.cos(alpha)
+    #qy = r * np.cos(phi) * np.sin(alpha)
+    #qz = r * (np.cos(phi) * np.cos(alpha) - 1)
     return np.array([qx, qy, qz])
 
 
@@ -107,5 +110,6 @@ def alpha(x, y, z):
 
 
 def phi(x, y, z):
-    return np.arctan2(x, np.sqrt(y ** 2 + z ** 2))
+    return np.arctan2(x, np.sqrt(z ** 2))
+    #return np.arctan2(x, np.sqrt(y ** 2 + z ** 2))
 
