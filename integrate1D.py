@@ -47,20 +47,20 @@ def cake_saxs(inpaints, ais, masks, radial_range=(0, 60), azimuth_range=(-90, 90
     :type npt_rad: int
     '''
     mg = MultiGeometry(ais,
-                       unit='2th_deg',
+                       unit='q_A^-1',
                        radial_range=radial_range,
                        azimuth_range=azimuth_range,
                        wavelength=None,
                        empty=0.0,
                        chi_disc=180)
 
-    cake, tth, chi = mg.integrate2d(lst_data= inpaints,
+    cake, q, chi = mg.integrate2d(lst_data= inpaints,
                                     npt_rad=npt_rad,
                                     npt_azim=npt_azim,
                                     correctSolidAngle=True,
                                     lst_mask=masks)
 
-    return cake, tth, chi
+    return cake, q, chi
 
 
 def integrate_rad_saxs(inpaints, ais, masks, radial_range=(0, 40), azimuth_range=(-90, 0), npt=2000):
@@ -84,24 +84,23 @@ def integrate_rad_saxs(inpaints, ais, masks, radial_range=(0, 40), azimuth_range
     '''
 
     mg = MultiGeometry(ais,
-                       unit='2th_deg',
+                       unit='q_A^-1',
                        radial_range=radial_range,
                        azimuth_range=azimuth_range,
                        wavelength=None,
                        empty=0.0,
                        chi_disc=180)
 
-    tth, I_th = mg.integrate1d(lst_data=inpaints,
+    q, I_th = mg.integrate1d(lst_data=inpaints,
                                npt=npt,
                                correctSolidAngle=True,
                                lst_mask=masks,
                                )
 
-    q = 1E-10 * (2 * np.pi / ais[0].wavelength)*np.sin(np.deg2rad(tth))
-    return q, tth, I_th
+    return q, I_th
 
 
-def integrate_azi_saxs(cake, tth_array, chi_array, radial_range=(0, 10), azimuth_range=(-90, 0)):
+def integrate_azi_saxs(cake, q_array, chi_array, radial_range=(0, 10), azimuth_range=(-90, 0)):
     '''
     Azimuthal integration of transmission data using masked array on a caked images (image in 2-theta_chi space)
 
@@ -118,11 +117,11 @@ def integrate_azi_saxs(cake, tth_array, chi_array, radial_range=(0, 10), azimuth
     :param azimuth_range: minimum and maximum of the 2th range in degree
     :type azimuth_range: Tuple
     '''
-    tth_mesh, chi_mesh = np.meshgrid(tth_array, chi_array)
+    q_mesh, chi_mesh = np.meshgrid(q_array, chi_array[::-1])
     cake_mask = np.ma.masked_array(cake)
 
-    cake_mask = np.ma.masked_where( tth_mesh < radial_range[0], cake_mask)
-    cake_mask = np.ma.masked_where( tth_mesh > radial_range[1], cake_mask)
+    cake_mask = np.ma.masked_where(q_mesh < radial_range[0], cake_mask)
+    cake_mask = np.ma.masked_where(q_mesh > radial_range[1], cake_mask)
 
     cake_mask = np.ma.masked_where(azimuth_range[0] > chi_mesh, cake_mask)
     cake_mask = np.ma.masked_where(azimuth_range[1] < chi_mesh , cake_mask)

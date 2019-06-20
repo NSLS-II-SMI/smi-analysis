@@ -5,7 +5,7 @@ from pyFAI.detectors import Pilatus300kw, Pilatus1M
 
 class Pilatus1M_SMI(Pilatus1M):
 
-    def calc_mask(img, bs=None):
+    def calc_mask(img, bs=None, bs_kind=None):
         mask = np.logical_not(detectors.Pilatus1M().calc_mask())
         mask[:, :5], mask[:, -5:], mask[:5, :], mask[-5:, :] = False, False, False, False
 
@@ -20,8 +20,8 @@ class Pilatus1M_SMI(Pilatus1M):
         if bs == [0, 0]:
             return np.logical_not(mask)
         else:
-            mask[bs[0] + 40:, bs[1] - 11:bs[1] + 11] = False
-            mask[bs[0]:bs[0] + 40, bs[1] - 22:bs[1] + 22] = False
+            mask[bs[1] + 40:, bs[0] - 11:bs[0] + 11] = False
+            if bs_kind == 'pindiode': mask[bs[1]:bs[1] + 40, bs[0] - 22:bs[0] + 22] = False
             return np.logical_not(mask)
 
 
@@ -31,7 +31,7 @@ class VerticalPilatus300kw(Pilatus300kw):
     MODULE_GAP = (7, 17)
     aliases = ["Pilatus 300kw (Vertical)"]
 
-    def calc_mask(self, bs):
+    def calc_mask(self, bs, bs_kind=None):
         mask = np.rot90(np.logical_not(detectors.Pilatus300kw().calc_mask()), 1)
 
         #border of the detector and chips
@@ -55,7 +55,7 @@ class VerticalPilatus300kw(Pilatus300kw):
         if bs == [0, 0]:
             return np.logical_not(mask)
         else:
-            mask[bs[0]:, bs[1] - 8 : bs[1] + 8] = False
+            mask[bs[1]:, bs[0] - 8 : bs[0] + 8] = False
             return np.logical_not(mask)
 
 
@@ -66,6 +66,6 @@ class Rayonix(Pilatus300kw):
     MODULE_GAP = (7, 17)
     aliases = ["Pilatus 300kw (Vertical)"]
 
-    def calc_mask(self, pixel_bs):
+    def calc_mask(self, pixel_bs, bs_kind=None):
         mask = False
         return np.logical_not(mask)
