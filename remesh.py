@@ -28,6 +28,7 @@ def remesh_gi(data, ai, npt=None, q_h_range=None, q_v_range=None, method='splitb
                                                 ip_range=q_h_range,
                                                 op_range=q_v_range,
                                                 method=method,
+                                                unit='A',
                                                 mask=mask)
 
     return img, q_par, q_ver
