@@ -123,22 +123,32 @@ class SMI_geometry():
 
 
     def caking(self, radial_range=None, azimuth_range=None, npt_rad=500, npt_azim=500):
-        if self.inpaints == []: self.inpainting()
         if self.img_st == []: self.stitching_data()
-        if radial_range is None and self.detector == 'Pilatus300kw': radial_range = (0.01, np.sqrt(self.qp[1]**2 + self.qz[1]**2))
+        if radial_range is None and self.detector == 'Pilatus300kw': radial_range = (0.01, np.sqrt(self.qp[1] ** 2 + self.qz[1] ** 2))
         if azimuth_range is None and self.detector == 'Pilatus300kw': azimuth_range = (-90, 0)
 
-        if radial_range is None and self.detector == 'Pilatus1m': radial_range =(0.01, np.sqrt(self.qp[1]**2 + self.qz[1]**2))
-        if azimuth_range is None and self.detector == 'Pilatus1m': azimuth_range=(-180, 180)
+        if radial_range is None and self.detector == 'Pilatus1m': radial_range = (0.01, np.sqrt(self.qp[1] ** 2 + self.qz[1] ** 2))
+        if azimuth_range is None and self.detector == 'Pilatus1m': azimuth_range = (-180, 180)
 
-        self.cake, self.q_cake, self.chi_cake = integrate1D.cake_saxs(self.inpaints,
-                                                                        self.ai,
-                                                                        self.mask_inpaints,
-                                                                        radial_range=radial_range,
-                                                                        azimuth_range=azimuth_range,
-                                                                        npt_rad=npt_rad,
-                                                                        npt_azim=npt_azim
-                                                                        )
+        if self.geometry == 'Transmission':
+            if self.inpaints == []: self.inpainting()
+            self.cake, self.q_cake, self.chi_cake = integrate1D.cake_saxs(self.inpaints,
+                                                                          self.ai,
+                                                                          self.mask_inpaints,
+                                                                          radial_range=radial_range,
+                                                                          azimuth_range=azimuth_range,
+                                                                          npt_rad=npt_rad,
+                                                                          npt_azim=npt_azim
+                                                                          )
+        elif self.geometry == 'Reflection':
+            #if self.inpaints == []: self.inpainting()
+            self.cake, self.q_cake, self.chi_cake = integrate1D.cake_gisaxs(self.img_st,
+                                                                            self.qp,
+                                                                            self.qz,
+                                                                            bins=None,
+                                                                            q_range=radial_range,
+                                                                            azimuth_range=azimuth_range
+                                                                            )
 
 
     def radial_averaging(self, radial_range=None, azimuth_range=None, npt=2000):
@@ -153,12 +163,12 @@ class SMI_geometry():
             if azimuth_range is None and self.detector == 'Pilatus1m': azimuth_range=(-180, 180)
 
             self.q_rad, self.I_rad = integrate1D.integrate_rad_saxs(self.inpaints,
-                                                                      self.ai,
-                                                                      self.masks,
-                                                                      radial_range = radial_range,
-                                                                      azimuth_range = azimuth_range,
-                                                                      npt = npt
-                                                                      )
+                                                                    self.ai,
+                                                                    self.masks,
+                                                                    radial_range = radial_range,
+                                                                    azimuth_range = azimuth_range,
+                                                                    npt = npt
+                                                                    )
 
         elif self.geometry == 'Reflection':
             if self.img_st == []: self.stitching_data()
@@ -168,9 +178,9 @@ class SMI_geometry():
             if radial_range is None and self.detector == 'Pilatus1m': radial_range = (0, self.qp[1])
             if azimuth_range is None and self.detector == 'Pilatus1m': azimuth_range=(0, self.qz[1])
 
-            self.q_rad, self.I_rad = integrate1D.integrate_rad_gisaxs(self.qp,
+            self.q_rad, self.I_rad = integrate1D.integrate_rad_gisaxs(self.img_st,
+                                                                      self.qp,
                                                                       self.qz,
-                                                                      self.img_st,
                                                                       bins = npt,
                                                                       q_par_range = radial_range,
                                                                       q_per_range = azimuth_range)
@@ -181,43 +191,32 @@ class SMI_geometry():
 
     def azimuthal_averaging(self, radial_range=None, azimuth_range=None, npt_rad=500, npt_azim=500):
         self.q_azi, self.I_azi = [], []
-        if self.geometry == 'Transmission':
-            if self.inpaints == []: self.inpainting()
-            if radial_range is None and self.detector == 'Pilatus300kw': radial_range = (0.01, np.sqrt(self.qp[1]**2 + self.qz[1]**2))
-            if azimuth_range is None and self.detector == 'Pilatus300kw': azimuth_range=(-90, -1)
+        if radial_range is None and self.detector == 'Pilatus300kw': radial_range = (0.01, np.sqrt(self.qp[1] ** 2 + self.qz[1] ** 2))
+        if azimuth_range is None and self.detector == 'Pilatus300kw': azimuth_range = (-90, -1)
 
-            if radial_range is None and self.detector == 'Pilatus1m': radial_range = (0.001, np.sqrt(self.qp[1]**2 + self.qz[1]**2))
-            if azimuth_range is None and self.detector == 'Pilatus1m': azimuth_range=(-180, 180)
+        if radial_range is None and self.detector == 'Pilatus1m': radial_range = (0.001, np.sqrt(self.qp[1] ** 2 + self.qz[1] ** 2))
+        if azimuth_range is None and self.detector == 'Pilatus1m': azimuth_range = (-180, 180)
 
-            if self.cake == []: self.caking(radial_range = radial_range,
-                                            azimuth_range = azimuth_range,
-                                            npt_rad=npt_rad,
-                                            npt_azim=npt_azim
-                                            )
+        if self.cake == []: self.caking(radial_range=radial_range,
+                                        azimuth_range=azimuth_range,
+                                        npt_rad=npt_rad,
+                                        npt_azim=npt_azim
+                                        )
 
-            self.chi_azi, self.I_azi = integrate1D.integrate_azi_saxs(self.cake,
-                                                                    self.q_cake,
-                                                                    self.chi_cake,
-                                                                    radial_range=radial_range,
-                                                                    azimuth_range=azimuth_range
-                                                                    )
-
-
-        #TODO: Implement  azimuthal integration for GI geometry
-        elif self.geometry== 'Reflection':
-            raise Exception('Not implemented yet')
-            #self.q_azi, self.I_azi = integrate1D.integrate_azi_gisaxs(self.imgs, self.ai, self.masks)
-
-        else:
-            raise Exception('Unknown geometry')
+        self.chi_azi, self.I_azi = integrate1D.integrate_azi_saxs(self.cake,
+                                                                  self.q_cake,
+                                                                  self.chi_cake,
+                                                                  radial_range=radial_range,
+                                                                  azimuth_range=azimuth_range
+                                                                  )
 
 
     def horizontal_integration(self, q_per_range=None, q_par_range=None):
         if self.img_st == []: self.stitching_data()
 
-        self.q_hor, self.I_hor = integrate1D.integrate_qpar(self.qp,
+        self.q_hor, self.I_hor = integrate1D.integrate_qpar(self.img_st,
+                                                            self.qp,
                                                             self.qz,
-                                                            self.img_st,
                                                             q_par_range=q_par_range,
                                                             q_per_range=q_per_range
                                                             )
@@ -225,9 +224,9 @@ class SMI_geometry():
     def vertical_integration(self, q_per_range=None, q_par_range=None):
         if self.img_st == []: self.stitching_data()
 
-        self.q_ver, self.I_ver = integrate1D.integrate_qper(self.qp,
+        self.q_ver, self.I_ver = integrate1D.integrate_qper(self.img_st,
+                                                            self.qp,
                                                             self.qz,
-                                                            self.img_st,
                                                             q_par_range=q_par_range,
                                                             q_per_range=q_per_range
                                                             )

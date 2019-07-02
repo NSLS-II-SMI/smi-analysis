@@ -131,7 +131,7 @@ def integrate_azi_saxs(cake, q_array, chi_array, radial_range=(0, 10), azimuth_r
 
 
 
-def integrate_rad_gisaxs(q_par, q_per, img, bins = 1000, q_par_range=None, q_per_range=None):
+def integrate_rad_gisaxs(img, q_par, q_per, bins = 1000, q_par_range=None, q_per_range=None):
     '''
     Radial integration of Grazing incidence data using the pyFAI multigeometry module
 
@@ -184,7 +184,7 @@ def integrate_rad_gisaxs(q_par, q_per, img, bins = 1000, q_par_range=None, q_per
 
     return q, I
 
-def integrate_qpar(q_par, q_per, img, q_par_range=None, q_per_range=None):
+def integrate_qpar(img, q_par, q_per, q_par_range=None, q_per_range=None):
     '''
     Horizontal integration of a 2D array using masked array
 
@@ -222,7 +222,7 @@ def integrate_qpar(q_par, q_per, img, q_par_range=None, q_per_range=None):
     return q_par, I_par
 
 
-def integrate_qper(q_par, q_per, img, q_par_range=None, q_per_range=None):
+def integrate_qper(img, q_par, q_per, q_par_range=None, q_per_range=None):
     '''
     Vertical integration of a 2D array using masked array
 
@@ -258,23 +258,41 @@ def integrate_qper(q_par, q_per, img, q_par_range=None, q_per_range=None):
     return q_per, I_per
 
 #TODO: Implement azimuthal integration for GI
-def integrate_azi_gisaxs(imgs, ais, masks, npt = 2000, radial_pos=None, radial_width=None, chi_range=None):
-    q_azis, I_azis = [], []
+def cake_gisaxs(img, q_par, q_per, bins = None, q_range=(0, 10), azimuth_range=(-90, 0)):
 
-    for i, (img, ai, mask) in enumerate(zip(imgs, ais, masks)):
-        I_azi, q_azi = ai.profile_chi(data=img,
-                                      npt=npt,
-                                      correctSolidAngle=False,
-                                      variance=None,
-                                      error_model=None,
-                                      radial_pos=radial_pos,
-                                      radial_width=radial_width,
-                                      chi_range=chi_range,
-                                      mask=np.logical_not(mask),
-                                      polarization_factor=None,
-                                      method="splitpix",
-                                      #unit=grazing_units.Q,
-                                      normalization_factor=1.)
-        q_azis.append(q_azi)
-        I_azis.append(I_azi)
-    return q_azis, I_azis
+    if bins is None: bins = tuple(reversed(img.shape))
+    if q_range is None: q_range = (0, q_par[-1])
+    if azimuth_range is None: azimuth_range = (-180, 180)
+
+    azimuth_range = np.deg2rad(azimuth_range)
+
+    #recalculate the q-range of the input array
+    q_h = np.linspace(q_par[0], q_par[-1], bins[0])
+    q_v = np.linspace(q_per[0], q_per[-1], bins[1])[::-1]
+
+    q_h_te, q_v_te = np.meshgrid(q_h, q_v)
+    tth_array = np.sqrt(q_h_te**2+ q_v_te**2)
+    chi_array = -np.arctan2(q_h_te, q_v_te)
+
+    #Mask the remeshed array
+    img_mask = np.ma.masked_array(img, mask= img == 0)
+
+    img_mask = np.ma.masked_where(tth_array < q_range[0], img_mask)
+    img_mask = np.ma.masked_where(tth_array > q_range[1], img_mask)
+
+    img_mask = np.ma.masked_where(chi_array < np.min(azimuth_range), img_mask)
+    img_mask = np.ma.masked_where(chi_array > np.max(azimuth_range), img_mask)
+
+    cake, q, chi, _, _ = splitBBox.histoBBox2d(weights=img_mask,
+                                               pos0=tth_array,
+                                               delta_pos0=np.ones_like(img_mask) * (q_par[1] - q_par[0])/bins[1],
+                                               pos1=chi_array,
+                                               delta_pos1=np.ones_like(img_mask) * (q_per[1] - q_per[0])/bins[1],
+                                               bins=bins,
+                                               pos0Range=np.array([np.min(q_range), np.max(q_range)]),
+                                               pos1Range=np.array([np.min(azimuth_range), np.max(azimuth_range)]),
+                                               dummy=None,
+                                               delta_dummy=None,
+                                               mask=img_mask.mask)
+
+    return cake, q, np.rad2deg(chi)[::-1]
