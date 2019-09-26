@@ -73,7 +73,6 @@ def remesh_transmission(image, ai, bins=None, q_h_range=None, q_v_range=None, ou
     if q_h_range is None: q_h_range = (q_h.min(), q_h.max())
     if q_v_range is None: q_v_range = (q_v.min(), q_v.max())
 
-
     I, q_y, q_z, _, _ = splitBBox.histoBBox2d(weights=image,
                                               pos0=q_h,
                                               delta_pos0=np.ones_like(image) * (q_h_range[1] - q_h_range[0]) / bins[0],
@@ -93,13 +92,14 @@ def remesh_transmission(image, ai, bins=None, q_h_range=None, q_v_range=None, ou
                                               #normalization_factor=normalization_factor,
                                               chiDiscAtPi=1,
                                               )
+    #print(q_y)
     return I, q_y, q_z
 
 def q_from_angles(phi, alpha, wavelength):
-    r = 2 * np.pi / wavelength
-    qx = r * np.sin(phi) * np.cos(alpha)
-    qy = r * np.sin(alpha)
-    qz = r * np.cos(alpha) * np.cos(alpha) - 1
+    r = 4 * np.pi / wavelength
+    qx = r * np.sin(0.5*phi) * np.cos(0.5*alpha)
+    qy = r * np.sin(0.5*alpha)
+    qz = r * np.cos(0.5*alpha) * np.cos(0.5*alpha) - 1
     #qx = r * np.sin(phi) * np.cos(alpha)
     #qy = r * np.cos(phi) * np.sin(alpha)
     #qz = r * (np.cos(phi) * np.cos(alpha) - 1)
