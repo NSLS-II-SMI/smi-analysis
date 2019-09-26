@@ -65,6 +65,7 @@ def remesh_transmission(image, ai, bins=None, q_h_range=None, q_v_range=None, ou
 
     alphas = alpha(r_x, r_y, r_z)
     phis = phi(r_x, r_y, r_z)
+
     q_x, q_y, q_z = q_from_angles(phis, alphas, ai.wavelength) * 1e-10
     q_v = q_y
     q_h = q_x
