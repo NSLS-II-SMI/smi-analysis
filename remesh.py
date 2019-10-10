@@ -70,9 +70,12 @@ def remesh_transmission(image, ai, bins=None, q_h_range=None, q_v_range=None, ou
     q_v = q_y
     q_h = q_x
 
+    resc_q = False
     if -q_v.min() > np.pi:
+        resc_q = True
         q_v *= 0.1
         q_h *= 0.1
+
 
     if bins is None: bins = tuple(reversed(image.shape))
     if q_h_range is None: q_h_range = (q_h.min(), q_h.max())
@@ -100,7 +103,7 @@ def remesh_transmission(image, ai, bins=None, q_h_range=None, q_v_range=None, ou
                                               chiDiscAtPi=1,
                                               )
 
-    if -q_v.min() > np.pi:
+    if resc_q:
         q_y *= 10
         q_z *= 10
     return I, q_y, q_z
