@@ -20,7 +20,7 @@ class Pilatus1M_SMI(Pilatus1M):
         if bs == [0, 0]:
             return np.logical_not(mask)
         else:
-            mask[bs[1] + 40:, bs[0] - 11:bs[0] + 11] = False
+            mask[bs[1]:, bs[0] - 11:bs[0] + 11] = False
             if bs_kind == 'pindiode': mask[bs[1]:bs[1] + 40, bs[0] - 22:bs[0] + 22] = False
             return np.logical_not(mask)
 
@@ -60,12 +60,34 @@ class VerticalPilatus300kw(Pilatus300kw):
 
 
 # TODO: define rayonix class
-class Rayonix(Pilatus300kw):
-    MAX_SHAPE = (1475, 195)
-    MODULE_SIZE = (487, 195)
-    MODULE_GAP = (7, 17)
-    aliases = ["Pilatus 300kw (Vertical)"]
 
-    def calc_mask(self, pixel_bs, bs_kind=None):
-        mask = False
+from pyFAI.detectors._common import Detector
+
+class rayonix(Detector):
+    """
+    Rayonix detector: generic description containing mask algorithm
+
+    Nota: 1920x1920 pixels, 0.109mm pixel size
+    """
+
+    def __init__(self, pixel1=109e-6, pixel2=109e-6, max_shape=None):
+        Detector.__init__(self, pixel1=pixel1, pixel2=pixel2, max_shape=max_shape)
+
+    def __repr__(self):
+        return "Detector %s\t PixelSize= %.3e, %.3e m" % \
+               (self.name, self._pixel1, self._pixel2)
+
+
+class Rayonix(rayonix):
+    MAX_SHAPE = (1920, 1920)
+    aliases = ["rayonix"]
+
+    def calc_mask(self, bs, bs_kind=None, img=None, threshold=15):
+        if img is None:
+            mask = True
+        else:
+            mask = np.ones_like(img, dtype=bool)
+            mask[:, :5], mask[:, -5:], mask[:5, :], mask[-5:, :] = False, False, False, False
+            mask[np.where(img < threshold)] = False
+
         return np.logical_not(mask)
