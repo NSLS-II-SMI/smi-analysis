@@ -61,10 +61,14 @@ class SMI_geometry():
         if len(lst_img) != len(self.bs): self.bs = self.bs + [[0,0]]*(len(lst_img) - len(self.bs))
 
         for img, bs in zip(lst_img, self.bs):
-            self.masks.append(self.det.calc_mask(bs=bs, bs_kind = self.bs_kind))
+            if self.detector != 'rayonix': self.masks.append(self.det.calc_mask(bs=bs, bs_kind = self.bs_kind))
 
             if self.detector == 'Pilatus1m': self.imgs.append(fabio.open(os.path.join(path, img)).data)
             elif self.detector == 'Pilatus300kw': self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1))
+            elif self.detector == 'rayonix':
+                self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1))
+                self.masks.append(self.det.calc_mask(bs=bs, bs_kind=self.bs_kind, img =self.imgs[0]))
+
             else:
                 raise Exception('Unknown detector for SMI')
 
@@ -127,6 +131,9 @@ class SMI_geometry():
         if radial_range is None and self.detector == 'Pilatus300kw': radial_range = (0.01, np.sqrt(self.qp[1] ** 2 + self.qz[1] ** 2))
         if azimuth_range is None and self.detector == 'Pilatus300kw': azimuth_range = (-90, 0)
 
+        if radial_range is None and self.detector == 'Pilatus300kw': radial_range = (0.01, np.sqrt(self.qp[1] ** 2 + self.qz[1] ** 2))
+        if azimuth_range is None and self.detector == 'Pilatus300kw': azimuth_range = (-90, 0)
+
         if radial_range is None and self.detector == 'Pilatus1m': radial_range = (0.01, np.sqrt(self.qp[1] ** 2 + self.qz[1] ** 2))
         if azimuth_range is None and self.detector == 'Pilatus1m': azimuth_range = (-180, 180)
 
@@ -174,6 +181,9 @@ class SMI_geometry():
             if self.img_st == []: self.stitching_data()
             if radial_range is None and self.detector == 'Pilatus300kw': radial_range = (0, self.qp[1])
             if azimuth_range is None and self.detector == 'Pilatus300kw': azimuth_range=(0, self.qz[1])
+
+            if radial_range is None and self.detector == 'rayonix': radial_range = (0, self.qp[1])
+            if azimuth_range is None and self.detector == 'rayonix': azimuth_range=(0, self.qz[1])
 
             if radial_range is None and self.detector == 'Pilatus1m': radial_range = (0, self.qp[1])
             if azimuth_range is None and self.detector == 'Pilatus1m': azimuth_range=(0, self.qz[1])
