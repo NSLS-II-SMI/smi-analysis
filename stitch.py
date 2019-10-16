@@ -92,7 +92,7 @@ def stitching(datas, ais, masks, geometry ='Reflection', resc_q=False):
     qz = [-qz_remesh.max(), -qz_remesh.min()]
 
     if resc_q:
-        qp *= 10
-        qz *= 10
+        qp[:] = [x * 10 for x in qp]
+        qz[:] = [x * 10 for x in qz]
 
     return img, qp, qz
