@@ -126,7 +126,7 @@ def integrate_azi_saxs(cake, q_array, chi_array, radial_range=(0, 10), azimuth_r
     cake_mask = np.ma.masked_where(azimuth_range[0] > chi_mesh, cake_mask)
     cake_mask = np.ma.masked_where(azimuth_range[1] < chi_mesh , cake_mask)
 
-    I_azi = np.mean(cake_mask, axis=1)
+    I_azi = cake_mask.mean(axis=1)
     return chi_array, I_azi
 
 
