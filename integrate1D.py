@@ -126,7 +126,7 @@ def integrate_azi_saxs(cake, q_array, chi_array, radial_range=(0, 10), azimuth_r
     cake_mask = np.ma.masked_where(azimuth_range[0] > chi_mesh, cake_mask)
     cake_mask = np.ma.masked_where(azimuth_range[1] < chi_mesh , cake_mask)
 
-    I_azi = np.sum(cake_mask, axis=1)
+    I_azi = np.mean(cake_mask, axis=1)
     return chi_array, I_azi
 
 
@@ -217,7 +217,7 @@ def integrate_qpar(img, q_par, q_per, q_par_range=None, q_per_range=None):
     img_mask = np.ma.masked_where(q_par_range[0] > qpar_mesh, img_mask)
     img_mask = np.ma.masked_where(q_par_range[1] < qpar_mesh , img_mask)
 
-    I_par = np.sum(img_mask, axis=0)
+    I_par = np.mean(img_mask, axis=0)
 
     return q_par, I_par
 
@@ -253,9 +253,10 @@ def integrate_qper(img, q_par, q_per, q_par_range=None, q_per_range=None):
     img_mask = np.ma.masked_where(q_par_mesh < q_par_range[0], img_mask)
     img_mask = np.ma.masked_where(q_par_mesh > q_par_range[1], img_mask)
 
-    I_per = np.sum(img_mask, axis=1)
+    I_per = np.mean(img_mask, axis=1)
 
     return q_per, I_per
+
 
 #TODO: Implement azimuthal integration for GI
 def cake_gisaxs(img, q_par, q_per, bins = None, q_range=(0, 10), azimuth_range=(-90, 0)):
