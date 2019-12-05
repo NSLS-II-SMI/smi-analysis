@@ -49,7 +49,6 @@ class SMI_geometry():
         if self.detector == 'Pilatus1m': self.det = Detector.Pilatus1M_SMI()
         elif self.detector == 'Pilatus300kw': self.det = Detector.VerticalPilatus300kw()
         elif self.detector == 'rayonix': self.det = Detector.Rayonix()
-
         else:
             raise Exception('Unknown detector for SMI')
 
@@ -68,9 +67,6 @@ class SMI_geometry():
             elif self.detector == 'rayonix':
                 self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1))
                 self.masks.append(self.det.calc_mask(bs=bs, bs_kind=self.bs_kind, img =self.imgs[0]))
-
-            else:
-                raise Exception('Unknown detector for SMI')
 
 
     def calculate_integrator_trans(self, det_rots):
@@ -112,12 +108,19 @@ class SMI_geometry():
             else:
                 raise Exception('Unknown geometry')
 
-        self.img_st, self.qp, self.qz = stitch.stitching(self.imgs,
-                                                         self.ai,
-                                                         self.masks,
-                                                         self.geometry
-                                                         )
+        self.img_st, self.qp, self.qz, scales = stitch.stitching(self.imgs,
+                                                                 self.ai,
+                                                                 self.masks,
+                                                                 self.geometry
+                                                                 )
 
+        if len(scales)==1: pass
+        elif len(scales)>1:
+            print('This test is working, scales', scales)
+            for i, scale in enumerate(scales):
+                self.imgs[i] = self.imgs[i] / scale
+        else:
+            raise Exception('scaling waxs images error')
 
     def inpainting(self):
         self.inpaints, self.mask_inpaints = integrate1D.inpaint_saxs(self.imgs,
