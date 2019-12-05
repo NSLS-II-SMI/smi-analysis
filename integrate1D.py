@@ -55,10 +55,10 @@ def cake_saxs(inpaints, ais, masks, radial_range=(0, 60), azimuth_range=(-90, 90
                        chi_disc=180)
 
     cake, q, chi = mg.integrate2d(lst_data= inpaints,
-                                    npt_rad=npt_rad,
-                                    npt_azim=npt_azim,
-                                    correctSolidAngle=True,
-                                    lst_mask=masks)
+                                  npt_rad=npt_rad,
+                                  npt_azim=npt_azim,
+                                  correctSolidAngle=True,
+                                  lst_mask=masks)
 
     return cake, q, chi
 
@@ -92,10 +92,9 @@ def integrate_rad_saxs(inpaints, ais, masks, radial_range=(0, 40), azimuth_range
                        chi_disc=180)
 
     q, I_th = mg.integrate1d(lst_data=inpaints,
-                               npt=npt,
-                               correctSolidAngle=True,
-                               lst_mask=masks,
-                               )
+                             npt=npt,
+                             correctSolidAngle=True,
+                             lst_mask=masks)
 
     return q, I_th
 
