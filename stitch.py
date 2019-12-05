@@ -67,6 +67,8 @@ def stitching(datas, ais, masks, geometry ='Reflection', resc_q=False):
             sca[np.nonzero(qimage)] += 1
             sca2[np.nonzero(qimage)] += 1
             scale = 1
+            scales = []
+            scales.append(scale)
 
         else:
             sca1 = np.ones(np.shape(sca)) * sca
@@ -81,6 +83,7 @@ def stitching(datas, ais, masks, geometry ='Reflection', resc_q=False):
             scale *= abs(np.mean(img2) - np.mean(img1)) / np.mean(img1)
             sca[:, qp_start:  qp_start + np.shape(qimage)[1]] += (qimage >= 1).astype(int)
             sca2[:, qp_start:  qp_start + np.shape(qimage)[1]] += (qimage >= 1).astype(int) * scale
+            scales.append(scale)
 
     sca2[np.where(sca2 == 0)] = 1
     img = img_te / sca2
@@ -95,4 +98,4 @@ def stitching(datas, ais, masks, geometry ='Reflection', resc_q=False):
         qp[:] = [x * 10 for x in qp]
         qz[:] = [x * 10 for x in qz]
 
-    return img, qp, qz
+    return img, qp, qz, scales
