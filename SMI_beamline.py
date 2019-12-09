@@ -116,7 +116,6 @@ class SMI_geometry():
 
         if len(scales)==1: pass
         elif len(scales)>1:
-            print('This test is working, scales', scales)
             for i, scale in enumerate(scales):
                 self.imgs[i] = self.imgs[i] / scale
         else:
