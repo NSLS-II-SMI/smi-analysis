@@ -97,7 +97,7 @@ class SMI_geometry():
             self.ai.append(ai_temp)
 
 
-    def stitching_data(self):
+    def stitching_data(self, flag_scale = True):
         self.ai = []
         self.img_st, self.qp, self.qz = [], [], []
 
@@ -111,10 +111,11 @@ class SMI_geometry():
         self.img_st, self.qp, self.qz, scales = stitch.stitching(self.imgs,
                                                                  self.ai,
                                                                  self.masks,
-                                                                 self.geometry
+                                                                 self.geometry,
+                                                                 flag_scale
                                                                  )
 
-        if len(scales)==1: pass
+        if len(scales)==1 or flag_scale==False: pass
         elif len(scales)>1:
             for i, scale in enumerate(scales):
                 self.imgs[i] = self.imgs[i] / scale

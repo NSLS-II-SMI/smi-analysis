@@ -1,7 +1,7 @@
 import numpy as np
 import remesh
 
-def stitching(datas, ais, masks, geometry ='Reflection', resc_q=False):
+def stitching(datas, ais, masks, geometry ='Reflection', flag_scale = True, resc_q=False):
     '''
     Remeshing in q-space the 2D image collected by the pixel detector and stitching together images at different detector position (if several images)
 
@@ -80,13 +80,15 @@ def stitching(datas, ais, masks, geometry ='Reflection', resc_q=False):
             img2 = np.ma.masked_array(img_te, mask=sca1 != 2 * sca)
             img2 = np.ma.masked_where(img2 < 1, img2)
 
+
             scale *= abs(np.mean(img2) - np.mean(img1)) / np.mean(img1)
             sca[:, qp_start:  qp_start + np.shape(qimage)[1]] += (qimage >= 1).astype(int)
             sca2[:, qp_start:  qp_start + np.shape(qimage)[1]] += (qimage >= 1).astype(int) * scale
             scales.append(scale)
 
-    sca2[np.where(sca2 == 0)] = 1
-    img = img_te / sca2
+    if flag_scale:
+        sca2[np.where(sca2 == 0)] = 1
+        img = img_te / sca2
 
     if geometry == 'Reflection':
         img = np.flipud(img)
