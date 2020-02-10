@@ -88,7 +88,7 @@ def stitching(datas, ais, masks, geometry ='Reflection', flag_scale = True, resc
                 sca2[:, qp_start:  qp_start + np.shape(qimage)[1]] += (qimage >= 1).astype(int) * scale
                 scales.append(scale)
             else:
-                sca2[:, qp_start:  qp_start + np.shape(qimage)[1]] += (qimage >= 1).astype(int)
+                sca2[:, qp_start:  qp_start + np.shape(qimage)[1]] += (qimage >= 0.00000001).astype(int)
                 scales.append(1)
 
     sca2[np.where(sca2 == 0)] = 1
