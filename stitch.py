@@ -89,6 +89,8 @@ def stitching(datas, ais, masks, geometry ='Reflection', flag_scale = True, resc
     if flag_scale:
         sca2[np.where(sca2 == 0)] = 1
         img = img_te / sca2
+    else:
+        img = img_te
 
     if geometry == 'Reflection':
         img = np.flipud(img)
