@@ -71,24 +71,28 @@ def stitching(datas, ais, masks, geometry ='Reflection', flag_scale = True, resc
             scales.append(scale)
 
         else:
+            if flag_scale:
+                threshold = 1
+            else:
+                threshold = 0.000001
             sca1 = np.ones(np.shape(sca)) * sca
-            sca1[:, qp_start: qp_start + np.shape(qimage)[1]] += (qimage >= 1).astype(int)
+            sca1[:, qp_start: qp_start + np.shape(qimage)[1]] += (qimage >= threshold).astype(int)
 
             img1 = np.ma.masked_array(img_te, mask=sca1 != 2 * sca)
-            img1 = np.ma.masked_where(img1 < 1, img1)
+            img1 = np.ma.masked_where(img1 < threshold, img1)
             img_te[:, qp_start:qp_start + np.shape(qimage)[1]] += qimage
             img2 = np.ma.masked_array(img_te, mask=sca1 != 2 * sca)
-            img2 = np.ma.masked_where(img2 < 1, img2)
+            img2 = np.ma.masked_where(img2 < threshold, img2)
 
 
             scale *= abs(np.mean(img2) - np.mean(img1)) / np.mean(img1)
-            sca[:, qp_start:  qp_start + np.shape(qimage)[1]] += (qimage >= 1).astype(int)
+            sca[:, qp_start:  qp_start + np.shape(qimage)[1]] += (qimage >= threshold).astype(int)
 
             if flag_scale:
-                sca2[:, qp_start:  qp_start + np.shape(qimage)[1]] += (qimage >= 1).astype(int) * scale
+                sca2[:, qp_start:  qp_start + np.shape(qimage)[1]] += (qimage >= threshold).astype(int) * scale
                 scales.append(scale)
             else:
-                sca2[:, qp_start:  qp_start + np.shape(qimage)[1]] += (qimage >= 0.00000001).astype(int)
+                sca2[:, qp_start:  qp_start + np.shape(qimage)[1]] += (qimage >= threshold).astype(int)
                 scales.append(1)
 
     sca2[np.where(sca2 == 0)] = 1
