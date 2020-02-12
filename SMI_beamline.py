@@ -53,14 +53,14 @@ class SMI_geometry():
             raise Exception('Unknown detector for SMI')
 
 
-    def open_data(self, path, lst_img):
+    def open_data(self, path, lst_img, optional_mask = None):
         if self.detector == None: self.define_detector()
 
         self.imgs = []
         if len(lst_img) != len(self.bs): self.bs = self.bs + [[0,0]]*(len(lst_img) - len(self.bs))
 
         for img, bs in zip(lst_img, self.bs):
-            if self.detector != 'rayonix': self.masks.append(self.det.calc_mask(bs=bs, bs_kind = self.bs_kind))
+            if self.detector != 'rayonix': self.masks.append(self.det.calc_mask(bs=bs, bs_kind = self.bs_kind, optional_mask=optional_mask))
 
             if self.detector == 'Pilatus1m': self.imgs.append(fabio.open(os.path.join(path, img)).data)
             elif self.detector == 'Pilatus300kw': self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1))
@@ -98,7 +98,7 @@ class SMI_geometry():
 
 
     def stitching_data(self, flag_scale = True):
-        self.ai = []
+        #self.ai = []
         self.img_st, self.qp, self.qz = [], [], []
 
         if self.ai == []:
