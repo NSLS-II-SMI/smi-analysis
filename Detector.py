@@ -4,8 +4,18 @@ from pyFAI.detectors import Pilatus300kw, Pilatus1M
 
 
 class Pilatus1M_SMI(Pilatus1M):
+    '''
+    Pilatus 1M class inherited from the pyFAI Pilatus1M class
+    This class is used to add a specific masking for the Pilatus 1M of SMI beamline at BNL
+    '''
 
-    def calc_mask(img, bs=None, bs_kind=None):
+    def calc_mask(self, bs=None, bs_kind=None, optional_mask=None):
+        '''
+        :param bs: (string) This is the beamstop position on teh detctor (teh pixels behind will be mask inherently)
+        :param bs_kind: (string) What beamstop is in: Only need to be defined if pindiode which have a different shape)
+        :param optional_mask: (string) This is usefull for tender x-ray energy and will add extra max at the chips junction
+        :return: (a 2D array) A mask array with 0 and 1 with 0s where the image will be masked
+        '''
         mask = np.logical_not(detectors.Pilatus1M().calc_mask())
         mask[:, :5], mask[:, -5:], mask[:5, :], mask[-5:, :] = False, False, False, False
 
@@ -15,6 +25,28 @@ class Pilatus1M_SMI(Pilatus1M):
         mask[372, 462], mask[454, 739], mask[657, 947], mask[869, 544], mask[870, 546], mask[
             870, 547] = False, False, False, False, False, False
         mask[870, 544], mask[871, 545], mask[871, 546], mask[871, 547] = False, False, False, False
+
+        #For tender x-rays
+        if optional_mask == 'tender':
+            i = 60
+            while i < np.shape(mask)[0]:
+                if 480 < i < 530:
+                    i = 554
+                mask[:, i - 2: i + 2] = False
+                i += 61
+
+            j = 97
+            while j < np.shape(mask)[0]:
+                if 150 < j < 250:
+                    j = 310
+                elif 380 < j < 420:
+                    j = 520
+                elif 600 < j < 700:
+                    j = 734
+                elif 790 < j < 890:
+                    j = 945
+                mask[j - 2: j + 2, :] = False
+                j += 100
 
         #Beamstop
         if bs == [0, 0]:
@@ -26,12 +58,17 @@ class Pilatus1M_SMI(Pilatus1M):
 
 
 class VerticalPilatus300kw(Pilatus300kw):
+    '''
+    VerticalPilatus300kw class inherited from the pyFAI Pilatus300kw class
+    This class is used to add a specific masking for the Pilatus 1M of SMI beamline at BNL
+    '''
+
     MAX_SHAPE = (1475, 195)
     MODULE_SIZE = (487, 195)
     MODULE_GAP = (7, 17)
     aliases = ["Pilatus 300kw (Vertical)"]
 
-    def calc_mask(self, bs, bs_kind=None):
+    def calc_mask(self, bs, bs_kind=None, optional_mask=None):
         mask = np.rot90(np.logical_not(detectors.Pilatus300kw().calc_mask()), 1)
 
         #border of the detector and chips
@@ -50,6 +87,18 @@ class VerticalPilatus300kw(Pilatus300kw):
         mask[1314, 82], mask[1315, 81] = False, False
 
         mask[674, 133], mask[674, 134], mask[1130, 20], mask[1239, 50] = False, False, False, False
+
+        # For tender x-rays
+        if optional_mask == 'tender':
+            mask[:, 92:102] = False
+            i = 59
+            while i < np.shape(mask)[0]:
+                if 450 < i < 550:
+                    i = 553
+                elif 970 < i < 1000:
+                    i = 1047
+                mask[1475 - i - 6:1475 - i, :] = False
+                i += 61
 
         #Beamstop
         if bs == [0, 0]:
