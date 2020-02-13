@@ -59,8 +59,8 @@ class Pilatus1M_SMI(Pilatus1M):
 
 class VerticalPilatus300kw(Pilatus300kw):
     '''
-    VerticalPilatus300kw class inherited from the pyFAI Pilatus300kw class
-    This class is used to add a specific masking for the Pilatus 1M of SMI beamline at BNL
+    VerticalPilatus300kw class inherited from the pyFAI Pilatus300kw class but rotated by 90 deg to fit the position of the WAXS detector at SMI
+    This class is used to add a specific masking for the Pilatus 300KW of SMI beamline at BNL
     '''
 
     MAX_SHAPE = (1475, 195)
@@ -69,6 +69,12 @@ class VerticalPilatus300kw(Pilatus300kw):
     aliases = ["Pilatus 300kw (Vertical)"]
 
     def calc_mask(self, bs, bs_kind=None, optional_mask=None):
+        '''
+        :param bs: (string) This is the beamstop position on teh detctor (teh pixels behind will be mask inherently)
+        :param bs_kind: (string) Not used for now but can be used if different beamstop are used
+        :param optional_mask: (string) This is usefull for tender x-ray energy and will add extra max at the chips junction
+        :return: (a 2D array) A mask array with 0 and 1 with 0s where the image will be masked
+        '''
         mask = np.rot90(np.logical_not(detectors.Pilatus300kw().calc_mask()), 1)
 
         #border of the detector and chips
@@ -76,8 +82,8 @@ class VerticalPilatus300kw(Pilatus300kw):
         mask[486, :], mask[494, :], mask[980, :], mask[988, :]= False, False, False, False
 
         #Dead pixel
-        dead_pix_x = [1386, 1387, 1386, 1387, 228, 307, 733, 733, 792, 1211, 1211, 1231, 1232, 1276, 1321, 1366, 1405, 1467]
-        dead_pix_y = [96, 96, 97, 97, 21, 67, 170, 171, 37, 109, 110, 74, 74, 57, 81, 181, 46, 188]
+        dead_pix_x = [1386, 1387, 1386, 1387, 228, 307, 733, 733, 792, 1211, 1211, 1231, 1232, 1276, 1321, 1366, 1405, 1467, 1355, 1371, 1356]
+        dead_pix_y = [96, 96, 97, 97, 21, 67, 170, 171, 37, 109, 110, 74, 74, 57, 81, 181, 46, 188, 84, 88, 105]
         for d_x, d_y in zip(dead_pix_x, dead_pix_y):
             mask[d_x, d_y] = False
 
