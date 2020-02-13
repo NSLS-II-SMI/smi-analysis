@@ -161,6 +161,8 @@ def integrate_rad_gisaxs(img, q_par, q_per, bins = 1000, q_par_range=None, q_per
 
     #Mask the remeshed array
     img_mask = np.ma.masked_array(img, mask=img == 0)
+    threshold = 0.1
+    img_mask = np.ma.masked_array(img < threshold, img_mask)
 
     img_mask = np.ma.masked_where(q_h_te < q_par_range[0], img_mask)
     img_mask = np.ma.masked_where(q_h_te > q_par_range[1], img_mask)
