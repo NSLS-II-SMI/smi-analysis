@@ -4,7 +4,7 @@ setup(
     name='SMI_analysis',
     version='1.0',
     py_modules=['SMI_beamline', 'remesh', 'stitch', 'integrate1D', 'Detector'],
-    install_requires=['numpy', 'scipy', 'pyFAI'],#,'pygix==0.1',],
+    install_requires=['numpy', 'scipy', 'pyFAI==0.17.0'],#,'pygix==0.1',],
     #dependency_links=['git+ssh://git@github.com/ronpandolfi/pygix.git#egg=pygix-0.1.4a0',],
     url='',
     license='',
