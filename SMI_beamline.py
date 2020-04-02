@@ -46,6 +46,9 @@ class SMI_geometry():
 
 
     def define_detector(self):
+        '''
+        Definition of the detectors in pyFAI framework, with a default mask
+        '''
         if self.detector == 'Pilatus1m': self.det = Detector.Pilatus1M_SMI()
         elif self.detector == 'Pilatus300kw': self.det = Detector.VerticalPilatus300kw()
         elif self.detector == 'rayonix': self.det = Detector.Rayonix()
@@ -54,6 +57,14 @@ class SMI_geometry():
 
 
     def open_data(self, path, lst_img, optional_mask = None):
+        '''
+        Function to open the data in a given path and with a name. A list of file needs to be pass for
+        stitching data taken at different waxs detector angle.
+        :param path: string. Path to the file on your computer
+        :param lst_img: list of string. List of filename to load sitting in the path folder
+        :param optional_mask: string. Can be 'tender' to mask extra chips of the detectors
+        :return:
+        '''
         if self.detector == None: self.define_detector()
 
         self.imgs = []
@@ -66,6 +77,28 @@ class SMI_geometry():
             elif self.detector == 'Pilatus300kw': self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1))
             elif self.detector == 'rayonix':
                 self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1))
+                self.masks.append(self.det.calc_mask(bs=bs, bs_kind=self.bs_kind, img =self.imgs[0]))
+
+
+    def open_data_db(self, lst_img, optional_mask = None):
+        '''
+        Function to load data directly a list of 2D array
+        :param lst_img: list of 2D arry containing the data. The data loaded together will be treated together as stitched images
+        :param optional_mask: string. Can be 'tender' to mask extra chips of the detectors
+        :return:
+        '''
+        if self.detector == None: self.define_detector()
+
+        self.imgs = []
+        if len(lst_img) != len(self.bs): self.bs = self.bs + [[0,0]]*(len(lst_img) - len(self.bs))
+
+        for img, bs in zip(lst_img, self.bs):
+            if self.detector != 'rayonix': self.masks.append(self.det.calc_mask(bs=bs, bs_kind = self.bs_kind, optional_mask=optional_mask))
+
+            if self.detector == 'Pilatus1m': self.imgs.append(img)
+            elif self.detector == 'Pilatus300kw': self.imgs.append(np.rot90(img, 1))
+            elif self.detector == 'rayonix':
+                self.imgs.append(np.rot90(img, 1))
                 self.masks.append(self.det.calc_mask(bs=bs, bs_kind=self.bs_kind, img =self.imgs[0]))
 
 
