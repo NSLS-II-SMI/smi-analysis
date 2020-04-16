@@ -4,7 +4,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
-import SMI_beamline
+from smi_analysis import SMI_beamline
 
 if __name__ == '__main__':
 

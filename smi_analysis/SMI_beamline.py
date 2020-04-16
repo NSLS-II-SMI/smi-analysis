@@ -1,6 +1,6 @@
 from pyFAI import azimuthalIntegrator
 from pygix import Transform
-import Detector, stitch, integrate1D
+from smi_analysis import Detector, stitch, integrate1D
 import os
 import fabio
 import numpy as np
