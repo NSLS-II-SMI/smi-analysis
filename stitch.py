@@ -72,7 +72,7 @@ def stitching(datas, ais, masks, geometry ='Reflection', flag_scale = True, resc
 
         else:
             if flag_scale:
-                threshold = 1
+                threshold = 0.1
             else:
                 threshold = 0.000001
             sca1 = np.ones(np.shape(sca)) * sca

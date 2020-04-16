@@ -70,7 +70,6 @@ def remesh_transmission(image, ai, bins=None, q_h_range=None, q_v_range=None, ou
     q_v = q_y
     q_h = q_x
 
-
     resc_q = False
     if -q_v.min() > np.pi:
         resc_q = True
@@ -102,7 +101,6 @@ def remesh_transmission(image, ai, bins=None, q_h_range=None, q_v_range=None, ou
                                               #normalization_factor=normalization_factor,
                                               chiDiscAtPi=1,
                                               )
-
 
     return I, q_y, q_z, resc_q
 

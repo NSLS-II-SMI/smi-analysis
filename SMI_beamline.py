@@ -53,7 +53,7 @@ class SMI_geometry():
         elif self.detector == 'Pilatus300kw': self.det = Detector.VerticalPilatus300kw()
         elif self.detector == 'rayonix': self.det = Detector.Rayonix()
         else:
-            raise Exception('Unknown detector for SMI')
+            raise Exception('Unknown detector for SMI. Should be either: Pilatus1m or Pilatus300kw or rayonix')
 
 
     def open_data(self, path, lst_img, optional_mask = None):
@@ -88,10 +88,10 @@ class SMI_geometry():
         :return:
         '''
         if self.detector == None: self.define_detector()
-
-        self.imgs = []
+        if not lst_img: raise Exception('You are trying to load an empty dataset')
         if len(lst_img) != len(self.bs): self.bs = self.bs + [[0,0]]*(len(lst_img) - len(self.bs))
 
+        self.imgs = []
         for img, bs in zip(lst_img, self.bs):
             if self.detector != 'rayonix': self.masks.append(self.det.calc_mask(bs=bs, bs_kind = self.bs_kind, optional_mask=optional_mask))
 
@@ -139,7 +139,7 @@ class SMI_geometry():
             if self.geometry == 'Transmission': self.calculate_integrator_trans(det_rot)
             elif self.geometry == 'Reflection': self.calculate_integrator_gi(det_rot)
             else:
-                raise Exception('Unknown geometry')
+                raise Exception('Unknown geometry: should be either Transmission or Reflection')
 
         self.img_st, self.qp, self.qz, scales = stitch.stitching(self.imgs,
                                                                  self.ai,
@@ -232,7 +232,7 @@ class SMI_geometry():
                                                                       q_per_range = azimuth_range)
 
         else:
-            raise Exception('Unknown geometry')
+            raise Exception('Unknown geometry: should be either Transmission or Reflection')
 
 
     def azimuthal_averaging(self, radial_range=None, azimuth_range=None, npt_rad=500, npt_azim=500):
