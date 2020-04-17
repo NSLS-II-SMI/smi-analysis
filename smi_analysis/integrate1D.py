@@ -60,7 +60,7 @@ def cake_saxs(inpaints, ais, masks, radial_range=(0, 60), azimuth_range=(-90, 90
                                   correctSolidAngle=True,
                                   lst_mask=masks)
 
-    return cake, q, chi
+    return cake, q, chi[::-1]
 
 
 def integrate_rad_saxs(inpaints, ais, masks, radial_range=(0, 40), azimuth_range=(-90, 0), npt=2000):
@@ -116,7 +116,8 @@ def integrate_azi_saxs(cake, q_array, chi_array, radial_range=(0, 10), azimuth_r
     :param azimuth_range: minimum and maximum of the 2th range in degree
     :type azimuth_range: Tuple
     '''
-    q_mesh, chi_mesh = np.meshgrid(q_array, chi_array[::-1])
+
+    q_mesh, chi_mesh = np.meshgrid(q_array, chi_array)
     cake_mask = np.ma.masked_array(cake)
 
     cake_mask = np.ma.masked_where(q_mesh < radial_range[0], cake_mask)
