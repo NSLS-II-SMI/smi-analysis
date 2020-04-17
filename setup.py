@@ -32,6 +32,10 @@ with open(path.join(here, 'requirements.txt')) as requirements_file:
     requirements = [line for line in requirements_file.read().splitlines()
                     if not line.startswith('#')]
 
+# Git-based installations aren't valid in install_requires.
+# Remove them from the list.
+requirements = [r for r in requirements if not r.startswith('git+')]
+
 
 setup(
     name='smi_analysis',

@@ -2,3 +2,4 @@
 numpy
 scipy
 pyFAI==0.17.0
+git+https://github.com/ronpandolfi/pygix.git
