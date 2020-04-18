@@ -1,3 +1,5 @@
+import numpy as np
+from smi_analysis import SMI_beamline
 
 def pull_db(doc):
     '''
@@ -92,3 +94,69 @@ def pull_db(doc):
         analysis_neededinfo.update({'wa_arc': wa_arc})
 
     return analysis_neededinfo
+
+
+
+
+def SMI_analysis_input(analysis_neededinfo):
+    '''
+    Converting the information extracted for a databroker document to the SMI object which will be use for processing the datass
+
+    :param analysis_neededinfo: dicrionary generated from a databroker documents with all the required information
+    :return: SMI_waxs, SMI_saxs: SMI beamline class object which would be used to convert the experimental data in reciprocal space,
+    performed rdial and azimuthal integrations, ...
+    '''
+
+    #initialize SMI_waxs and SMI_saxs
+    SMI_waxs, SMI_saxs = None, None
+
+    geometry = analysis_neededinfo.get('geometry')
+    energy = 0.001 * analysis_neededinfo.get('energy')
+    wav = 1E-10 * (12.398 / energy)
+    incident_angle = np.deg2rad(analysis_neededinfo.get('alphai'))
+
+    if 'pil300KW' in analysis_neededinfo.get('detector'):
+        bs_kind_waxs = analysis_neededinfo.get('pil300kw_bs_kind')
+        detector_waxs = analysis_neededinfo.get('pil300kw_name')
+        sdd_waxs = analysis_neededinfo.get('pil300kw_sdd')
+        center_waxs = [analysis_neededinfo.get('pil300kw_dir_beam_x'),
+                       analysis_neededinfo.get('pil300kw_dir_beam_y')]
+        bs_pos_waxs = [[analysis_neededinfo.get('pil300kw_bs_x'),
+                        analysis_neededinfo.get('pil300kw_bs_y')]]
+
+        # If pil300kW record, the waxs position will also be recorded so just initialize to 0
+        det_ini_angle_waxs = np.deg2rad(0)
+        det_angular_step_waxs = np.deg2rad(0)
+        SMI_waxs = SMI_beamline.SMI_geometry(geometry=geometry,
+                                             detector=detector_waxs,
+                                             sdd=sdd_waxs,
+                                             wav=wav,
+                                             alphai=incident_angle,
+                                             center=center_waxs,
+                                             bs_pos=bs_pos_waxs,
+                                             det_ini_angle=det_ini_angle_waxs,
+                                             det_angle_step=det_angular_step_waxs,
+                                             bs_kind=bs_kind_waxs)
+
+    if 'pil1M' in analysis_neededinfo.get('detector'):
+        bs_kind_saxs = analysis_neededinfo.get('pil1m_bs_kind')
+        detector_saxs = analysis_neededinfo.get('pil1m_name')
+        sdd_saxs = analysis_neededinfo.get('pil300KW_sdd')
+        center_saxs = [analysis_neededinfo.get('pil1m_dir_beam_x'),
+                       analysis_neededinfo.get('pil1m_dir_beam_y')]
+        bs_pos_saxs = [[analysis_neededinfo.get('pil1m_bs_x'),
+                        analysis_neededinfo.get('pil1m_bs_y')]]
+        det_ini_angle_saxs = np.deg2rad(0)
+        det_angular_step_saxs = np.deg2rad(0)
+        SMI_saxs = SMI_beamline.SMI_geometry(geometry=geometry,
+                                             detector=detector_saxs,
+                                             sdd=sdd_saxs,
+                                             wav=wav,
+                                             alphai=incident_angle,
+                                             center=center_saxs,
+                                             bs_pos=bs_pos_saxs,
+                                             det_ini_angle=det_ini_angle_saxs,
+                                             det_angle_step=det_angular_step_saxs,
+                                             bs_kind=bs_kind_saxs)
+
+    return SMI_waxs, SMI_saxs
