@@ -36,6 +36,7 @@ class SMI_geometry():
         self.det_angle_step = det_angle_step
         self.det_angles = None
 
+
         self.ai = []
         self.masks = []
         self.cake = []
