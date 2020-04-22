@@ -2,4 +2,6 @@
 numpy
 scipy
 pyFAI==0.17.0
+xarray
+
 git+https://github.com/ronpandolfi/pygix.git
