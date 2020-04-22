@@ -96,11 +96,9 @@ def pull_db(doc):
     return analysis_neededinfo
 
 
-
-
 def SMI_analysis_input(analysis_neededinfo):
     '''
-    Converting the information extracted for a databroker document to the SMI object which will be use for processing the datass
+    Converting the information extracted for a databroker document to the SMI object which will be use for processing the data
 
     :param analysis_neededinfo: dicrionary generated from a databroker documents with all the required information
     :return: SMI_waxs, SMI_saxs: SMI beamline class object which would be used to convert the experimental data in reciprocal space,
@@ -160,3 +158,73 @@ def SMI_analysis_input(analysis_neededinfo):
                                              bs_kind=bs_kind_saxs)
 
     return SMI_waxs, SMI_saxs
+
+
+import xarray as xr
+
+#ToDo: This can be combined with the function pulling info from the baseline and start document later\
+# Will just separate them for now.
+def extract_data(doc):
+    '''
+    Function to load the 2D images from a Databroker, and pulled out the data.
+    :param doc: databroker documents
+    :return: dataset: a xarray Dataset with everything.
+    '''
+
+    #ToDo: Check what is the message if failed
+    #ToDo: how to look if doc.data is empty
+    if doc.stop['exit_status'] == 'failed':
+        if not doc.data:
+            raise Exception('The scanned failed and no data were recorded')
+
+
+    start_doc = doc.start
+    detector = start_doc.get('detectors', 'No detectors')
+    motor = start_doc.get('motors', ['No_motors'])
+
+    #ToDo: How to handle waxs. Can be in start only or in motors but we do not want it twice in the xarray\
+    # Find a way to overwrite it if scanned
+    data = {}
+    #This is for now the important motors recorded for the analysis
+    data.update({'xbpm3': xr.DataArray(list(doc.data('xbpm3_sumX'))),
+                 'xbpm2': xr.DataArray(list(doc.data('xbpm2_sumX'))),
+                 'waxs_arc': xr.DataArray(list(doc.data('waxs_arc'))),
+                 'ring_current': xr.DataArray(list(doc.data('ring_current')))})
+
+    for motors in motor:
+        if motors != 'No_motors':
+            data.update({motors: xr.DataArray(list(doc.data(motors)))})
+
+    for detectors in detector:
+        data.update({detectors + '_image': xr.DataArray(list(doc.data(detectors + '_image')))})
+
+    dataset = xr.Dataset(data)
+    return dataset
+
+
+#ToDo: implement a function to classify xarray dataset efficiently fo the analysis
+def classify_data(dataset):
+    '''
+    Function to load the xarray dataset in order to classify the data for theanalysis.
+    This part is specific to SMI since we are collecting several images with the same that need to be further combined.
+    :param dataset: xarray dataset
+    :return: array_data: list of list of data.
+    '''
+
+    #Todo: This work only for piezo x for now and will need to be change to be working with waxs arc, which is the main\
+    # motor to check and classify accordingly
+
+    field = list(dataset)
+    groups = dataset.groupby('piezo_x')
+    array_data_saxs = [[]]
+    array_data_waxs = [[]]
+
+    if 'pil1M_image' in field:
+        for group in groups:
+            array_data_saxs = array_data_saxs + [img for img in group[1].pil1M_image]
+
+    if 'pil300KW_image' in field:
+        for group in groups:
+            array_data_waxs = array_data_waxs + [img for img in group[1].pil300KW_image]
+
+    return array_data_saxs, array_data_waxs
