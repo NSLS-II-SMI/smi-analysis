@@ -1,7 +1,7 @@
 import numpy as np
 from smi_analysis import remesh
 
-def stitching(datas, ais, masks, geometry ='Reflection', flag_scale = True, resc_q=False):
+def stitching(datas, ais, masks, geometry ='Reflection', interp_factor = 2, flag_scale = True, resc_q=False):
     '''
     Remeshing in q-space the 2D image collected by the pixel detector and stitching together images at different detector position (if several images)
 
@@ -13,6 +13,12 @@ def stitching(datas, ais, masks, geometry ='Reflection', flag_scale = True, resc
     :type ais: list of AzimuthalIntegrator / TransformIntegrator
     :param geometry: Geometry of the experiment (either Transmission or Reflection)
     :type geometry: string
+    :param interp_factor: factor to increase the binning of the stitching image. Can help fixing some mask issues
+    :type interp_factor: float
+    :param flag_scale: Boolean to scale or not consecutive images at different detector positions
+    :type flag_scale: Boolean
+    :param resc_q: Rescale qs. This is a trick to fix a bug from pyFAI when qs have a higher value than pi
+    :type resc_q: Boolean
     '''
 
     for i, (data, ai, mask) in enumerate(zip(datas, ais, masks)):
@@ -36,7 +42,7 @@ def stitching(datas, ais, masks, geometry ='Reflection', flag_scale = True, resc
         y = np.argmin(abs(q_p_ini[:, i - 1] - np.min(q_p_ini[:, i])))
         nb_point += len(q_p_ini[:, i]) - y
 
-
+    nb_point = nb_point * interp_factor
     qp_remesh = np.linspace(min(q_p_ini[:, 0]), max(q_p_ini[:, -1]), nb_point)
     qz_remesh = np.linspace(min(q_z_ini[:, 0]), max(q_z_ini[:, -1]), int(
         (nb_point) * abs(max(q_z_ini[:, -1]) - min(q_z_ini[:, 0])) / abs(max(q_p_ini[:, -1]) - min(q_p_ini[:, 0]))))
@@ -56,13 +62,17 @@ def stitching(datas, ais, masks, geometry ='Reflection', flag_scale = True, resc
         elif geometry == 'Transmission':
             ip_range = (qp_remesh[qp_start], qp_remesh[qp_stop])
             op_range = (qz_remesh[0], qz_remesh[-1])
+            qmask,_,_,_ = remesh.remesh_transmission(mask.astype(int), ai, bins=npt, q_h_range=ip_range, q_v_range=op_range, mask=None)
             qimage, x, y, resc_q = remesh.remesh_transmission(data, ai, bins=npt, q_h_range=ip_range, q_v_range=op_range, mask=mask)
 
 
         if i == 0:
             img_te = np.zeros((np.shape(qz_remesh)[0], np.shape(qp_remesh)[0]))
+            img_mask = np.zeros(np.shape(img_te))
+
             sca, sca1, sca2 = np.zeros(np.shape(img_te)), np.zeros(np.shape(img_te)), np.zeros(np.shape(img_te))
             img_te[:, :np.shape(qimage)[1]] = qimage
+            img_mask[:, :np.shape(qmask)[1]] += np.logical_not(qmask).astype(int)
 
             sca[np.nonzero(qimage)] += 1
             sca2[np.nonzero(qimage)] += 1
@@ -81,6 +91,8 @@ def stitching(datas, ais, masks, geometry ='Reflection', flag_scale = True, resc
             img1 = np.ma.masked_array(img_te, mask=sca1 != 2 * sca)
             img1 = np.ma.masked_where(img1 < threshold, img1)
             img_te[:, qp_start:qp_start + np.shape(qimage)[1]] += qimage
+            img_mask[:, qp_start:qp_start + np.shape(qimage)[1]] += ((qimage >= threshold).astype(int) * np.logical_not(qmask).astype(int))
+
             img2 = np.ma.masked_array(img_te, mask=sca1 != 2 * sca)
             img2 = np.ma.masked_where(img2 < threshold, img2)
 
@@ -98,6 +110,9 @@ def stitching(datas, ais, masks, geometry ='Reflection', flag_scale = True, resc
     sca2[np.where(sca2 == 0)] = 1
     img = img_te / sca2
 
+    mask = (img_mask.astype(bool)).astype(int)
+
+
     if geometry == 'Reflection':
         img = np.flipud(img)
 
@@ -108,4 +123,5 @@ def stitching(datas, ais, masks, geometry ='Reflection', flag_scale = True, resc
         qp[:] = [x * 10 for x in qp]
         qz[:] = [x * 10 for x in qz]
 
-    return img, qp, qz, scales
+    # return img, qp, qz, scales
+    return img, mask, qp, qz, scales

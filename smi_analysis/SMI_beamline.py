@@ -132,7 +132,7 @@ class SMI_geometry():
             self.ai.append(ai_temp)
 
 
-    def stitching_data(self, flag_scale = True):
+    def stitching_data(self, flag_scale = True, interp_factor = 1):
         #self.ai = []
         self.img_st, self.qp, self.qz = [], [], []
 
@@ -144,11 +144,12 @@ class SMI_geometry():
             else:
                 raise Exception('Unknown geometry: should be either Transmission or Reflection')
 
-        self.img_st, self.qp, self.qz, scales = stitch.stitching(self.imgs,
+        self.img_st, self.mask_st, self.qp, self.qz, scales = stitch.stitching(self.imgs,
                                                                  self.ai,
                                                                  self.masks,
                                                                  self.geometry,
-                                                                 flag_scale
+                                                                 flag_scale = flag_scale,
+                                                                 interp_factor = interp_factor
                                                                  )
 
         if len(scales)==1 or flag_scale==False: pass
