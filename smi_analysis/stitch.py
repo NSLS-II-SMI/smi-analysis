@@ -55,7 +55,7 @@ def stitching(datas, ais, masks, geometry ='Reflection', interp_factor = 2, flag
         if geometry == 'Reflection':
             ip_range = (-qp_remesh[qp_start], -qp_remesh[qp_stop])
             op_range = (qz_remesh[0], qz_remesh[-1])
-            msk,_,_ = remesh.remesh_gi(mask.astype(int), ai, npt=npt, q_h_range=ip_range, q_v_range=op_range, method='splitbbox', mask=None)
+            msk,_,_ = remesh.remesh_gi(mask.astype(int), ai, npt=npt, q_h_range=ip_range, q_v_range=op_range, method='splitbbox', mask=mask)
             img, x, y = remesh.remesh_gi(data, ai, npt=npt, q_h_range=ip_range, q_v_range=op_range, method='splitbbox', mask=mask)
             qimage, qmask = np.rot90(img, 2), np.rot90(msk, 2)
             qp, qz = -x[::-1], y[::-1]
