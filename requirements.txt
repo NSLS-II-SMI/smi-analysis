@@ -3,5 +3,6 @@ numpy
 scipy
 pyFAI==0.17.0
 xarray
+h5py
 
 git+https://github.com/ronpandolfi/pygix.git
