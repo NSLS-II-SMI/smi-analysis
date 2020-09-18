@@ -1,6 +1,7 @@
 import numpy as np
 from pyFAI.ext import splitBBox
 
+
 def remesh_gi(data, ai, npt=None, q_h_range=None, q_v_range=None, method='splitbbox', mask=None):
     """
     Redraw the Grazing-Incidence image in (qp, qz) coordinates using pyGIX
@@ -33,7 +34,8 @@ def remesh_gi(data, ai, npt=None, q_h_range=None, q_v_range=None, method='splitb
 
     return img, q_par, q_ver
 
-def remesh_transmission(image, ai, bins=None, q_h_range=None, q_v_range=None, out_range=None, coord_sys='qp_qz', mask=None):
+
+def remesh_transmission(image, ai, bins=None, q_h_range=None, q_v_range=None, mask=None):
     """
     Redraw the Transmission image in (qp, qz) coordinates using pyFAI splitBBox.histoBBox2d method
 
@@ -49,10 +51,6 @@ def remesh_transmission(image, ai, bins=None, q_h_range=None, q_v_range=None, ou
     :type q_h_range: Tuple(float, float), optional
     :param q_v_range: Starting and ending point for the q_vertical range
     :type q_v_range: Tuple(float, float), optional
-    :param out_range: q range of the output image
-    :type out_range: [[left, right],[lower, upper]], optional
-    :param coord_sys: Output ooordinate system
-    :type coord_sys: str, 'qp_qz', 'qy_qz' or 'theta_alpha'
     :param mask: Mask of the 2D raw image
     :type mask: numpy 2D array of boolean
     """
@@ -77,10 +75,10 @@ def remesh_transmission(image, ai, bins=None, q_h_range=None, q_v_range=None, ou
         q_h *= 0.1
 
     if bins is None: bins = tuple(reversed(image.shape))
-    if q_h_range is None: q_h_range = (q_h.min(), q_h.max())
-    if q_v_range is None: q_v_range = (q_v.min(), q_v.max())
-
-
+    if q_h_range is None:
+        q_h_range = (q_h.min(), q_h.max())
+    if q_v_range is None:
+        q_v_range = (q_v.min(), q_v.max())
 
     I, q_y, q_z, _, _ = splitBBox.histoBBox2d(weights=image,
                                               pos0=q_h,
@@ -104,22 +102,55 @@ def remesh_transmission(image, ai, bins=None, q_h_range=None, q_v_range=None, ou
 
     return I, q_y, q_z, resc_q
 
+
 def q_from_angles(phi, alpha, wavelength):
+    """
+    Conversion of angle to q values for SAXS configuration
+
+    Parameters:
+    -----------
+    :param phi: 2D array containing the radial angle of each pixel in the image
+    :type phi: ndarray
+    :param alpha: 2D array containing the azimuthal angle of each pixel in the image
+    :type alpha: ndarray
+    :param wavelength: wavelength of the x-rays
+    :type wavelength: float
+    """
     r = 4 * np.pi / wavelength
     qx = r * np.sin(0.5*phi) * np.cos(0.5*alpha)
     qy = r * np.sin(0.5*alpha)
     qz = r * np.cos(0.5*alpha) * np.cos(0.5*alpha) - 1
-    #qx = r * np.sin(phi) * np.cos(alpha)
-    #qy = r * np.cos(phi) * np.sin(alpha)
-    #qz = r * (np.cos(phi) * np.cos(alpha) - 1)
     return np.array([qx, qy, qz])
 
 
 def alpha(x, y, z):
+    """
+    Conversion each pixel of the image in azimuthal angle
+
+    Parameters:
+    -----------
+    :param x: 2D array containing the X of each pixel in the image
+    :type x: ndarray
+    :param y: 2D array containing the Y of each pixel in the image
+    :type y: ndarray
+    :param z: 2D array containing the Z of each pixel in the image
+    :type z: ndarray
+    """
     return np.arctan2(y, np.sqrt(x ** 2 + z ** 2))
 
 
 def phi(x, y, z):
+    """
+    Conversion each pixel of the image in radial angle
+
+    Parameters:
+    -----------
+    :param x: 2D array containing the X of each pixel in the image
+    :type x: ndarray
+    :param y: 2D array containing the Y of each pixel in the image
+    :type y: ndarray
+    :param z: 2D array containing the Z of each pixel in the image
+    :type z: ndarray
+    """
     return np.arctan2(x, np.sqrt(z ** 2))
-    #return np.arctan2(x, np.sqrt(y ** 2 + z ** 2))
 
