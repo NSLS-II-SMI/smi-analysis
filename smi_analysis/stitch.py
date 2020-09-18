@@ -45,7 +45,7 @@ def stitching(datas, ais, masks, geometry ='Reflection', interp_factor = 2, flag
     nb_point = nb_point * interp_factor
     qp_remesh = np.linspace(min(q_p_ini[:, 0]), max(q_p_ini[:, -1]), nb_point)
     qz_remesh = np.linspace(min(q_z_ini[:, 0]), max(q_z_ini[:, -1]), int(
-        (nb_point) * abs(max(q_z_ini[:, -1]) - min(q_z_ini[:, 0])) / abs(max(q_p_ini[:, -1]) - min(q_p_ini[:, 0]))))
+        nb_point * abs(max(q_z_ini[:, -1]) - min(q_z_ini[:, 0])) / abs(max(q_p_ini[:, -1]) - min(q_p_ini[:, 0]))))
 
     for i, (data, ai, mask) in enumerate(zip(datas, ais, masks)):
         qp_start = np.argmin(abs(qp_remesh - np.min(q_p_ini[:, i])))
