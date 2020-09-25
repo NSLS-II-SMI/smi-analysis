@@ -282,7 +282,7 @@ class SMI_geometry():
         if azimuth_range is None and self.detector == 'Pilatus1m':
             azimuth_range = (-180, 180)
 
-        if not self.cake == []:
+        if self.cake == []:
             self.caking(radial_range=radial_range,
                         azimuth_range=azimuth_range,
                         npt_rad=npt_rad,
