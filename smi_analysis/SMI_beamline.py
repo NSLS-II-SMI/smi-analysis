@@ -97,6 +97,8 @@ class SMI_geometry():
             elif self.detector == 'rayonix':
                 self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1))
                 self.masks.append(self.det.calc_mask(bs=bs, bs_kind=self.bs_kind, img=self.imgs[0]))
+            elif self.detector == 'Pilatus100k_OPLS':
+                self.imgs.append(fabio.open(os.path.join(path, img)).data)
 
     def open_data_db(self, lst_img, optional_mask=None):
         """
