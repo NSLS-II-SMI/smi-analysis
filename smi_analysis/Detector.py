@@ -27,7 +27,7 @@ class Pilatus100k_OPLS(Pilatus100k):
         if bs == [0, 0]:
             return np.logical_not(mask)
         else:
-            mask[bs[1]:, bs[0] - 11:bs[0] + 11] = False
+            mask[bs[1]:, bs[0] - 8:bs[0] + 8] = False
             return np.logical_not(mask)
 
 
