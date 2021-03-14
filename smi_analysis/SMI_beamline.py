@@ -24,7 +24,7 @@ class SMI_geometry():
         self.sdd = sdd
         self.wav = wav
         self.geometry = geometry
-        self.alphai = alphai
+        self.alphai = np.rad2deg(-alphai)
         self.center = center
         if len(bs_pos) == 2:
             self.bs = [bs_pos]
