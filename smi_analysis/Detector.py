@@ -1,6 +1,6 @@
 import numpy as np
 from pyFAI import detectors
-from pyFAI.detectors import Pilatus300kw, Pilatus1M, Pilatus100k
+from pyFAI.detectors import Pilatus300kw, Pilatus1M, Pilatus100k, Pilatus300k
 
 
 
