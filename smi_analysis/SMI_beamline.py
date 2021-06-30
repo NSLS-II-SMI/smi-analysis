@@ -130,6 +130,10 @@ class SMI_geometry():
             elif self.detector == 'rayonix':
                 self.imgs.append(np.rot90(img, 1))
                 self.masks.append(self.det.calc_mask(bs=bs, bs_kind=self.bs_kind, img=self.imgs[0]))
+            elif self.detector == 'Pilatus100k_OPLS':
+                self.imgs.append(img)
+            elif self.detector == 'Pilatus300k_OPLS':
+                self.imgs.append(img)
 
     def calculate_integrator_trans(self, det_rots):
         ai = azimuthalIntegrator.AzimuthalIntegrator(**{'detector': self.det,
