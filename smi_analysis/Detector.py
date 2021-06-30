@@ -44,7 +44,7 @@ class Pilatus300k_OPLS(Pilatus300k):
         :param optional_mask: (string) This is usefull for tender x-ray energy and will add extra max at the chips junction
         :return: (a 2D array) A mask array with 0 and 1 with 0s where the image will be masked
         '''
-        mask = np.logical_not(detectors.Pilatus100k().calc_mask())
+        mask = np.logical_not(detectors.Pilatus300k().calc_mask())
         mask[:, :5], mask[:, -5:], mask[:5, :], mask[-5:, :] = False, False, False, False
 
         #Hot pixels needs to be defines
