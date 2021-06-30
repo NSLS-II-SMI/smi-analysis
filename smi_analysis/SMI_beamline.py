@@ -99,6 +99,8 @@ class SMI_geometry():
                 self.masks.append(self.det.calc_mask(bs=bs, bs_kind=self.bs_kind, img=self.imgs[0]))
             elif self.detector == 'Pilatus100k_OPLS':
                 self.imgs.append(fabio.open(os.path.join(path, img)).data)
+            elif self.detector == 'Pilatus300k_OPLS':
+                self.imgs.append(fabio.open(os.path.join(path, img)).data)
 
     def open_data_db(self, lst_img, optional_mask=None):
         """
@@ -229,12 +231,12 @@ class SMI_geometry():
             if self.inpaints == []:
                 self.inpainting()
             if radial_range is None and self.detector == 'Pilatus300kw':
-                radial_range = (0.01, np.sqrt(self.qp[1]**2 + self.qz[1]**2))
+                radial_range = (0.001, np.sqrt(self.qp[1]**2 + self.qz[1]**2))
             if azimuth_range is None and self.detector == 'Pilatus300kw':
                 azimuth_range = (0, 90)
 
             if radial_range is None and self.detector == 'Pilatus1m':
-                radial_range = (0.001, np.sqrt(self.qp[1]**2 + self.qz[1]**2))
+                radial_range = (0.0001, np.sqrt(self.qp[1]**2 + self.qz[1]**2))
             if azimuth_range is None and self.detector == 'Pilatus1m':
                 azimuth_range = (-180, 180)
 
