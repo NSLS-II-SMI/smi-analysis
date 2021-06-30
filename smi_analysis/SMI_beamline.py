@@ -67,6 +67,8 @@ class SMI_geometry():
             self.det = Detector.Rayonix()
         elif self.detector == 'Pilatus100k_OPLS':
             self.det = Detector.Pilatus100k_OPLS()
+        elif self.detector == 'Pilatus300k_OPLS':
+            self.det = Detector.Pilatus300k_OPLS()
         else:
             raise Exception('Unknown detector for SMI. Should be either: Pilatus1m or Pilatus300kw or rayonix')
 
