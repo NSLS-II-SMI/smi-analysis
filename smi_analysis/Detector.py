@@ -194,9 +194,10 @@ class VerticalPilatus900kw(Pilatus300kw):
 
         #border of the detector and chips
         mask[:, :5], mask[:, -5:], mask[:5, :], mask[-5:, :] = False, False, False, False
-        mask[:, 195:211], mask[:, 407:423] = False, False
-        mask[487:493, :], mask[981:987, :] = False, False
-
+        # mask[:, 195:211], mask[:, 407:423] = False, False
+        # mask[487:493, :], mask[981:987, :] = False, False
+        mask[:, 193:213], mask[:, 405:425] = False, False
+        mask[485:495, :], mask[979:989, :] = False, False
 
         # For tender x-rays
         if optional_mask == 'tender':
