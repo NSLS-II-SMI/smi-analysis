@@ -182,6 +182,7 @@ class VerticalPilatus900kw(Pilatus300kw):
     MODULE_GAP = (7, 17)
     aliases = ["Pilatus 900kw (Vertical)"]
 
+
     def calc_mask(self, bs, bs_kind=None, optional_mask=None):
         '''
         :param bs: (string) This is the beamstop position on teh detctor (teh pixels behind will be mask inherently)
@@ -189,24 +190,13 @@ class VerticalPilatus900kw(Pilatus300kw):
         :param optional_mask: (string) This is usefull for tender x-ray energy and will add extra max at the chips junction
         :return: (a 2D array) A mask array with 0 and 1 with 0s where the image will be masked
         '''
-        mask = np.rot90(np.zeros(self.MAX_SHAPE), 1)
+        mask = np.ones(self.MAX_SHAPE)
 
         #border of the detector and chips
         mask[:, :5], mask[:, -5:], mask[:5, :], mask[-5:, :] = False, False, False, False
-        mask[486, :], mask[494, :], mask[980, :], mask[988, :]= False, False, False, False
+        mask[:, 195:211], mask[:, 407:423] = False, False
+        mask[487:493, :], mask[981:987, :] = False, False
 
-        #Dead pixel
-        dead_pix_x = [1386, 1387, 1386, 1387, 228, 307, 733, 733, 792, 1211, 1211, 1231, 1232, 1276, 1321, 1366, 1405, 1467, 1355, 1372, 1356]
-        dead_pix_y = [96, 96, 97, 97, 21, 67, 170, 171, 37, 109, 110, 74, 74, 57, 81, 181, 46, 188, 85, 89, 106]
-        for d_x, d_y in zip(dead_pix_x, dead_pix_y):
-            mask[d_x, d_y] = False
-
-        #Hot pixels
-        mask[1314, 81] = False
-        mask[732, 7], mask[732, 8], mask[733, 8], mask[733, 7], mask[733, 9] = False, False, False, False, False
-        mask[1314, 82], mask[1315, 81] = False, False
-
-        mask[674, 133], mask[674, 134], mask[1130, 20], mask[1239, 50] = False, False, False, False
 
         # For tender x-rays
         if optional_mask == 'tender':
