@@ -189,7 +189,7 @@ class VerticalPilatus900kw(Pilatus300kw):
         :param optional_mask: (string) This is usefull for tender x-ray energy and will add extra max at the chips junction
         :return: (a 2D array) A mask array with 0 and 1 with 0s where the image will be masked
         '''
-        mask = np.rot90(np.logical_not(detectors.Pilatus300kw().calc_mask()), 1)
+        mask = np.rot90(np.zeros(self.MAX_SHAPE), 1)
 
         #border of the detector and chips
         mask[:, :5], mask[:, -5:], mask[:5, :], mask[-5:, :] = False, False, False, False
