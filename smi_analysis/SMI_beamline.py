@@ -61,6 +61,8 @@ class SMI_geometry():
         """
         if self.detector == 'Pilatus1m':
             self.det = Detector.Pilatus1M_SMI()
+        elif self.detector == 'Pilatus900kw':
+            self.det = Detector.VerticalPilatus900kw()
         elif self.detector == 'Pilatus300kw':
             self.det = Detector.VerticalPilatus300kw()
         elif self.detector == 'rayonix':
@@ -94,6 +96,8 @@ class SMI_geometry():
 
             if self.detector == 'Pilatus1m':
                 self.imgs.append(fabio.open(os.path.join(path, img)).data)
+            elif self.detector == 'Pilatus900kw':
+                self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1))
             elif self.detector == 'Pilatus300kw':
                 self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1))
             elif self.detector == 'rayonix':
@@ -125,6 +129,8 @@ class SMI_geometry():
 
             if self.detector == 'Pilatus1m':
                 self.imgs.append(img)
+            elif self.detector == 'Pilatus900kw':
+                self.imgs.append(np.rot90(img, 1))
             elif self.detector == 'Pilatus300kw':
                 self.imgs.append(np.rot90(img, 1))
             elif self.detector == 'rayonix':
@@ -200,12 +206,10 @@ class SMI_geometry():
     def caking(self, radial_range=None, azimuth_range=None, npt_rad=500, npt_azim=500):
         if self.img_st == []:
             self.stitching_data()
-        if radial_range is None and self.detector == 'Pilatus300kw': radial_range = (0.01, np.sqrt(self.qp[1] ** 2 + self.qz[1] ** 2))
-        if azimuth_range is None and self.detector == 'Pilatus300kw': azimuth_range = (-180, 180)
 
-        if radial_range is None and self.detector == 'Pilatus1m':
+        if radial_range is None and (self.detector == 'Pilatus300kw' or self.detector == 'Pilatus1m'):
             radial_range = (0.01, np.sqrt(self.qp[1] ** 2 + self.qz[1] ** 2))
-        if azimuth_range is None and self.detector == 'Pilatus1m':
+        if azimuth_range is None and (self.detector == 'Pilatus300kw' or self.detector == 'Pilatus1m'):
             azimuth_range = (-180, 180)
 
         if self.geometry == 'Transmission':
