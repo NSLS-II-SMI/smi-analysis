@@ -198,7 +198,7 @@ class VerticalPilatus900kw(Pilatus300kw):
         mask[485:495, :], mask[979:989, :] = False, False
 
         #Hot pixels
-        mask[20, 288], mask[402, 580], mask[1293, 304], mask[183, 260] = False, False, False
+        mask[20, 288], mask[402, 580], mask[1293, 304], mask[183, 260] = False, False, False, False
 
         # For tender x-rays
         if optional_mask == 'tender':
