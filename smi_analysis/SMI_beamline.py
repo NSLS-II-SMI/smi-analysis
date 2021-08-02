@@ -26,10 +26,7 @@ class SMI_geometry():
         self.geometry = geometry
         self.alphai = np.rad2deg(-alphai)
         self.center = center
-        if len(bs_pos) == 2:
-            self.bs = [bs_pos]
-        else:
-            self.bs = bs_pos
+        self.bs = bs_pos
         self.geometry = geometry
         self.detector = detector
 
