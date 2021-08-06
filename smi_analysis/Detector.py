@@ -203,6 +203,9 @@ class VerticalPilatus900kw(Pilatus300kw):
         # For tender x-rays
         if optional_mask == 'tender':
             mask[:, 92:102] = False
+            mask[:, 304:314] = False
+            mask[:, 516:526] = False
+
             i = 59
             while i < np.shape(mask)[0]:
                 if 450 < i < 550:
