@@ -40,6 +40,7 @@ class SMI_geometry():
         self.inpaints, self.mask_inpaints = [], []
         self.img_st, self.mask_st = [], []
         self.bs_kind = bs_kind
+        self.scale = 1
 
         self.define_detector()
 
@@ -178,7 +179,7 @@ class SMI_geometry():
             else:
                 raise Exception('Unknown geometry: should be either Transmission or Reflection')
 
-        self.img_st, self.mask_st, self.qp, self.qz, scales = stitch.stitching(self.imgs,
+        self.img_st, self.mask_st, self.qp, self.qz, self.scales = stitch.stitching(self.imgs,
                                                                                self.ai,
                                                                                self.masks,
                                                                                self.geometry,
@@ -186,11 +187,11 @@ class SMI_geometry():
                                                                                interp_factor=interp_factor
                                                                                )
 
-        if len(scales) == 1 or not flag_scale:
+        if len(self.scales) == 1 or not flag_scale:
             pass
-        elif len(scales) > 1:
-            for i, scale in enumerate(scales):
-                self.imgs[i] = self.imgs[i] / scale
+        elif len(self.scales) > 1:
+            for i, scale in enumerate(self.scales):
+                self.imgs[i] = self.imgs[i] / self.scale
         else:
             raise Exception('scaling waxs images error')
 
@@ -204,9 +205,9 @@ class SMI_geometry():
         if self.img_st == []:
             self.stitching_data()
 
-        if radial_range is None and (self.detector == 'Pilatus300kw' or self.detector == 'Pilatus1m'):
+        if radial_range is None and ('Pilatus' in self.detector):
             radial_range = (0.01, np.sqrt(self.qp[1] ** 2 + self.qz[1] ** 2))
-        if azimuth_range is None and (self.detector == 'Pilatus300kw' or self.detector == 'Pilatus1m'):
+        if azimuth_range is None and ('Pilatus' in self.detector):
             azimuth_range = (-180, 180)
 
         if self.geometry == 'Transmission':
