@@ -15,8 +15,9 @@ class SMI_geometry():
                  center,
                  bs_pos,
                  detector,
-                 det_ini_angle,
-                 det_angle_step,
+                 det_ini_angle=0,
+                 det_angle_step=0,
+                 det_angles=None,
                  alphai=0,
                  bs_kind=None):
 
@@ -32,7 +33,7 @@ class SMI_geometry():
 
         self.det_ini_angle = det_ini_angle
         self.det_angle_step = det_angle_step
-        self.det_angles = None
+        self.det_angles = det_angles
 
         self.ai = []
         self.masks = []
@@ -40,7 +41,7 @@ class SMI_geometry():
         self.inpaints, self.mask_inpaints = [], []
         self.img_st, self.mask_st = [], []
         self.bs_kind = bs_kind
-        self.scale = 1
+        self.scales = 1
 
         self.define_detector()
 
@@ -90,12 +91,21 @@ class SMI_geometry():
 
         for img, bs in zip(lst_img, self.bs):
             if self.detector != 'rayonix':
-                self.masks.append(self.det.calc_mask(bs=bs, bs_kind=self.bs_kind, optional_mask=optional_mask))
+                if self.detector == 'Pilatus900kw':
+                    mask1, mask2, mask3 = self.det.calc_mask(bs=bs, bs_kind=self.bs_kind, optional_mask=optional_mask)
+                    self.masks.append(mask1)
+                    self.masks.append(mask2)
+                    self.masks.append(mask3)
+
+                else:
+                    self.masks.append(self.det.calc_mask(bs=bs, bs_kind=self.bs_kind, optional_mask=optional_mask))
 
             if self.detector == 'Pilatus1m':
                 self.imgs.append(fabio.open(os.path.join(path, img)).data)
             elif self.detector == 'Pilatus900kw':
-                self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1))
+                self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1)[:, :195])
+                self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1)[:, 212:212 + 195])
+                self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1)[:, -195:])
             elif self.detector == 'Pilatus300kw':
                 self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1))
             elif self.detector == 'rayonix':
@@ -128,7 +138,9 @@ class SMI_geometry():
             if self.detector == 'Pilatus1m':
                 self.imgs.append(img)
             elif self.detector == 'Pilatus900kw':
-                self.imgs.append(np.rot90(img, 1))
+                self.imgs.append([np.rot90(img, 1)[:, :195],
+                                  np.rot90(img, 1)[:, 212:212 + 195],
+                                  np.rot90(img, 1)[:, -195:]])
             elif self.detector == 'Pilatus300kw':
                 self.imgs.append(np.rot90(img, 1))
             elif self.detector == 'rayonix':
@@ -171,7 +183,14 @@ class SMI_geometry():
 
         if self.ai == []:
             if not self.det_angles or len(self.det_angles) != len(self.imgs):
-                self.det_angles = [self.det_ini_angle + i * self.det_angle_step for i in range(0, len(self.imgs), 1)]
+                if self.detector == 'Pilatus900kw' and 3*len(self.det_angles) == len(self.imgs):
+                    angles = []
+                    for angle in self.det_angles:
+                        angles = angles + [angle - np.deg2rad(7.45), angle, angle + np.deg2rad(7.45)]
+                    self.det_angles = angles
+                else:
+                    self.det_angles = [self.det_ini_angle + i * self.det_angle_step for i in range(0, len(self.imgs), 1)]
+
             if self.geometry == 'Transmission':
                 self.calculate_integrator_trans(self.det_angles)
             elif self.geometry == 'Reflection':
@@ -180,18 +199,18 @@ class SMI_geometry():
                 raise Exception('Unknown geometry: should be either Transmission or Reflection')
 
         self.img_st, self.mask_st, self.qp, self.qz, self.scales = stitch.stitching(self.imgs,
-                                                                               self.ai,
-                                                                               self.masks,
-                                                                               self.geometry,
-                                                                               flag_scale=flag_scale,
-                                                                               interp_factor=interp_factor
-                                                                               )
+                                                                                    self.ai,
+                                                                                    self.masks,
+                                                                                    self.geometry,
+                                                                                    flag_scale=flag_scale,
+                                                                                    interp_factor=interp_factor
+                                                                                    )
 
         if len(self.scales) == 1 or not flag_scale:
             pass
         elif len(self.scales) > 1:
             for i, scale in enumerate(self.scales):
-                self.imgs[i] = self.imgs[i] / self.scale
+                self.imgs[i] = self.imgs[i] / scale
         else:
             raise Exception('scaling waxs images error')
 
@@ -205,9 +224,9 @@ class SMI_geometry():
         if self.img_st == []:
             self.stitching_data()
 
-        if radial_range is None and ('Pilatus' in self.detector):
+        if radial_range is None and 'Pilatus' in self.detector:
             radial_range = (0.01, np.sqrt(self.qp[1] ** 2 + self.qz[1] ** 2))
-        if azimuth_range is None and ('Pilatus' in self.detector):
+        if azimuth_range is None and 'Pilatus' in self.detector:
             azimuth_range = (-180, 180)
 
         if self.geometry == 'Transmission':
@@ -238,9 +257,9 @@ class SMI_geometry():
         if self.geometry == 'Transmission':
             if self.inpaints == []:
                 self.inpainting()
-            if radial_range is None and self.detector == 'Pilatus300kw':
+            if radial_range is None and (self.detector == 'Pilatus300kw' or self.detector == 'Pilatus900kw'):
                 radial_range = (0.001, np.sqrt(self.qp[1]**2 + self.qz[1]**2))
-            if azimuth_range is None and self.detector == 'Pilatus300kw':
+            if azimuth_range is None and (self.detector == 'Pilatus300kw' or self.detector == 'Pilatus900kw'):
                 azimuth_range = (0, 90)
 
             if radial_range is None and self.detector == 'Pilatus1m':
@@ -259,19 +278,14 @@ class SMI_geometry():
         elif self.geometry == 'Reflection':
             if self.img_st == []:
                 self.stitching_data()
-            if radial_range is None and self.detector == 'Pilatus300kw':
+            if radial_range is None and 'Pilatus' in self.detector:
                 radial_range = (0, self.qp[1])
-            if azimuth_range is None and self.detector == 'Pilatus300kw':
+            if azimuth_range is None and 'Pilatus' in self.detector:
                 azimuth_range = (0, self.qz[1])
 
             if radial_range is None and self.detector == 'rayonix':
                 radial_range = (0, self.qp[1])
             if azimuth_range is None and self.detector == 'rayonix':
-                azimuth_range = (0, self.qz[1])
-
-            if radial_range is None and self.detector == 'Pilatus1m':
-                radial_range = (0, self.qp[1])
-            if azimuth_range is None and self.detector == 'Pilatus1m':
                 azimuth_range = (0, self.qz[1])
 
             self.q_rad, self.I_rad = integrate1D.integrate_rad_gisaxs(self.img_st,
@@ -286,9 +300,9 @@ class SMI_geometry():
 
     def azimuthal_averaging(self, radial_range=None, azimuth_range=None, npt_rad=500, npt_azim=500):
         self.chi_azi, self.I_azi = [], []
-        if radial_range is None and self.detector == 'Pilatus300kw':
+        if radial_range is None and (self.detector == 'Pilatus300kw' or self.detector == 'Pilatus900kw'):
             radial_range = (0.01, np.sqrt(self.qp[1] ** 2 + self.qz[1] ** 2))
-        if azimuth_range is None and self.detector == 'Pilatus300kw':
+        if azimuth_range is None and (self.detector == 'Pilatus300kw' or self.detector == 'Pilatus900kw'):
             azimuth_range = (1, 90)
 
         if radial_range is None and self.detector == 'Pilatus1m':
