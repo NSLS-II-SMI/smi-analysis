@@ -71,19 +71,22 @@ def stitching(datas, ais, masks, geometry ='Reflection', interp_factor = 2, flag
             img_te = np.zeros((np.shape(qz_remesh)[0], np.shape(qp_remesh)[0]))
             img_mask = np.zeros(np.shape(img_te))
 
-            sca, sca1, sca2 = np.zeros(np.shape(img_te)), np.zeros(np.shape(img_te)), np.zeros(np.shape(img_te))
+            sca, sca1, sca2, sca3 = np.zeros(np.shape(img_te)), np.zeros(np.shape(img_te)), \
+                                    np.zeros(np.shape(img_te)), np.zeros(np.shape(img_te))
             img_te[:, :np.shape(qimage)[1]] = qimage
             img_mask[:, :np.shape(qmask)[1]] += np.logical_not(qmask).astype(int)
 
             sca[np.nonzero(qimage)] += 1
             sca2[np.nonzero(qimage)] += 1
-            scale = 1
+            sca3[np.nonzero(qimage)] += 1
+
+            scale = 1.
             scales = []
             scales.append(scale)
 
         else:
             if flag_scale:
-                threshold = 0.1
+                threshold = 0.01
             else:
                 threshold = 0.000001
             sca1 = np.ones(np.shape(sca)) * sca
@@ -97,13 +100,38 @@ def stitching(datas, ais, masks, geometry ='Reflection', interp_factor = 2, flag
             img2 = np.ma.masked_array(img_te, mask=sca1 != 2 * sca)
             img2 = np.ma.masked_where(img2 < threshold, img2)
 
-
             scale *= abs(np.mean(img2) - np.mean(img1)) / np.mean(img1)
+            if np.ma.is_masked(scale):
+                scale = scales[i-1]
+
             sca[:, qp_start:  qp_start + np.shape(qimage)[1]] += (qimage >= threshold).astype(int)
 
             if flag_scale:
-                sca2[:, qp_start:  qp_start + np.shape(qimage)[1]] += (qimage >= threshold).astype(int) * scale
-                scales.append(scale)
+                if ai.detector.aliases[0] != 'Pilatus 900kw (Vertical)':
+                    sca2[:, qp_start:  qp_start + np.shape(qimage)[1]] += (qimage >= threshold).astype(int) * scale
+                    scales.append(scale)
+                else:
+                    if i % 3 == 0:
+                        sca3 = np.zeros(np.shape(img_te))
+                        sca3[:, qp_start:  qp_start + np.shape(qimage)[1]] += (qimage >= threshold).astype(int)
+                        scales.append(scale)
+                    elif i % 3 == 1:
+                        sca4 = np.zeros(np.shape(img_te))
+                        sca4[:, qp_start:  qp_start + np.shape(qimage)[1]] += (qimage >= threshold).astype(int)
+                        scales.append(scale)
+                    elif i % 3 == 2:
+                        sca5 = np.zeros(np.shape(img_te))
+                        sca5[:, qp_start:  qp_start + np.shape(qimage)[1]] += (qimage >= threshold).astype(int)
+                        scales.append(scale)
+
+                        scale_max = np.max(scales[i-2:i])
+                        if i == 2:
+                            sca2 = np.zeros(np.shape(img_te))
+                        sca2 += sca3 * scale_max
+                        sca2 += sca4 * scale_max
+                        sca2 += sca5 * scale_max
+                        scales[i-2], scales[i-1], scales[i] = scale_max, scale_max, scale_max
+
             else:
                 sca2[:, qp_start:  qp_start + np.shape(qimage)[1]] += (qimage >= threshold).astype(int)
                 scales.append(1)
@@ -112,7 +140,6 @@ def stitching(datas, ais, masks, geometry ='Reflection', interp_factor = 2, flag
     img = img_te / sca2
 
     mask = (img_mask.astype(bool)).astype(int)
-
 
     if geometry == 'Reflection':
         img = np.flipud(img)
