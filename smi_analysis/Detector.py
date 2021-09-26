@@ -179,7 +179,7 @@ class VerticalPilatus900kw(Pilatus300kw):
     MAX_SHAPE = (1475, 195)
     MODULE_SIZE = (487, 195)
     MODULE_GAP = (7, 17)
-    aliases = ["Pilatus 300kw (Vertical)"]
+    aliases = ["Pilatus 900kw (Vertical)"]
 
     def calc_mask(self, bs, bs_kind=None, optional_mask=None):
         '''
