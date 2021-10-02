@@ -186,7 +186,7 @@ class SMI_geometry():
                 if self.detector == 'Pilatus900kw' and 3*len(self.det_angles) == len(self.imgs):
                     angles = []
                     for angle in self.det_angles:
-                        angles = angles + [angle - np.deg2rad(7.45), angle, angle + np.deg2rad(7.45)]
+                        angles = angles + [angle - np.deg2rad(7.47), angle, angle + np.deg2rad(7.47)]
                     self.det_angles = angles
                 else:
                     self.det_angles = [self.det_ini_angle + i * self.det_angle_step for i in range(0, len(self.imgs), 1)]
