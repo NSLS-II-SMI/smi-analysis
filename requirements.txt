@@ -1,7 +1,7 @@
 # List required packages in this file, one per line.
-numpy
-scipy
-pyFAI
-xarray
 h5py
+numpy
+pyFAI
 pygix
+scipy
+xarray
