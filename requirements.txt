@@ -1,8 +1,7 @@
 # List required packages in this file, one per line.
 numpy
 scipy
-pyFAI==0.17.0
+pyFAI
 xarray
 h5py
-
-git+https://github.com/ronpandolfi/pygix.git
+pygix
