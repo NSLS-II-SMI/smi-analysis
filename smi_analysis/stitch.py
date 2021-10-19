@@ -50,10 +50,10 @@ def stitching(datas, ais, masks, geometry ='Reflection', interp_factor = 2, flag
     for i, (data, ai, mask) in enumerate(zip(datas, ais, masks)):
         qp_start = np.argmin(abs(qp_remesh - np.min(q_p_ini[:, i])))
         qp_stop = np.argmin(abs(qp_remesh - np.max(q_p_ini[:, i])))
-        npt = (np.int(qp_stop - qp_start), np.int(np.shape(qz_remesh)[0]))
+        npt = (int(qp_stop - qp_start), int(np.shape(qz_remesh)[0]))
 
         if geometry == 'Reflection':
-            ip_range = (-qp_remesh[qp_start], -qp_remesh[qp_stop])
+            ip_range = (-qp_remesh[qp_stop], -qp_remesh[qp_start])
             op_range = (qz_remesh[0], qz_remesh[-1])
             msk,_,_ = remesh.remesh_gi(mask.astype(int), ai, npt=npt, q_h_range=ip_range, q_v_range=op_range, method='splitbbox', mask=mask)
             img, x, y = remesh.remesh_gi(data, ai, npt=npt, q_h_range=ip_range, q_v_range=op_range, method='splitbbox', mask=mask)
