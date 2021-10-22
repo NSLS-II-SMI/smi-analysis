@@ -41,7 +41,7 @@ setup(
     name='smi-analysis',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    description="Scientific python for data analysis at the Soft matter Interface beamline at NSLS-II",
+    description="Scientific Python for data analysis at the Soft Matter Interface (SMI) beamline at NSLS-II",
     long_description=readme,
     long_description_content_type='text/markdown',
     author="Brokhaven National Laboratory",
