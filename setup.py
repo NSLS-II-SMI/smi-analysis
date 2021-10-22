@@ -24,7 +24,7 @@ pip install --upgrade pip
 
 here = path.abspath(path.dirname(__file__))
 
-with open(path.join(here, 'README.rst'), encoding='utf-8') as readme_file:
+with open(path.join(here, 'README.md'), encoding='utf-8') as readme_file:
     readme = readme_file.read()
 
 with open(path.join(here, 'requirements.txt')) as requirements_file:
@@ -43,6 +43,7 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     description="Scientific python for data analysis at the Soft matter Interface beamline at NSLS-II",
     long_description=readme,
+    long_description_content_type='text/markdown',
     author="Brokhaven National Laboratory",
     author_email='gfreychet@bnl.gov',
     url='https://github.com/NSLS-II-SMI/smi-analysis',
