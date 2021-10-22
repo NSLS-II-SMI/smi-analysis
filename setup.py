@@ -38,14 +38,14 @@ requirements = [r for r in requirements if not r.startswith('git+')]
 
 
 setup(
-    name='smi_analysis',
+    name='smi-analysis',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     description="Scientific python for data analysis at the Soft matter Interface beamline at NSLS-II",
     long_description=readme,
     author="Brokhaven National Laboratory",
     author_email='gfreychet@bnl.gov',
-    url='https://github.com/gfreychet/smi_analysis',
+    url='https://github.com/NSLS-II-SMI/smi-analysis',
     python_requires='>={}'.format('.'.join(str(n) for n in min_version)),
     packages=find_packages(exclude=['docs', 'tests']),
     entry_points={
@@ -62,7 +62,7 @@ setup(
         ]
     },
     install_requires=requirements,
-    license="BSD (3-clause)",
+    license="BSD-3-Clause",
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Natural Language :: English',
