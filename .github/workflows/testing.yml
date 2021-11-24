@@ -1,0 +1,62 @@
+name: Unit Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        host-os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+        python-version: ["3.7", "3.8", "3.9"]
+      fail-fast: false
+
+    runs-on: ${{ matrix.host-os }}
+
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: testenv
+          allow-softlinks: true
+          auto-activate-base: false
+          auto-update-conda: true
+          channel-priority: flexible
+          channels: conda-forge
+          miniconda-version: "latest"
+          python-version: ${{ matrix.python-version }}
+          show-channel-urls: true
+          use-only-tar-bz2: false
+
+      - name: Install the package
+        run: |
+          set -vxeuo pipefail
+
+          # These packages are installed in the base environment but may be older
+          # versions. Explicitly upgrade them because they often create
+          # installation problems if out of date.
+          python3 -m pip install --upgrade pip setuptools wheel numpy
+
+          # Versioneer uses the most recent git tag to generate __version__,
+          # which appears in the published documentation.
+          git fetch --tags
+          python3 -m pip install .
+          python3 -m pip list
+
+      - name: Install test requirements
+        run: |
+          set -vxeuo pipefail
+          python3 -m pip install -r requirements-dev.txt
+          python3 -m pip list
+
+      - name: Test with pytest
+        run: |
+          set -vxeuo pipefail
+          coverage run -m pytest -v
+          coverage report
