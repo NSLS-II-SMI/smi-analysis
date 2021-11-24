@@ -17,7 +17,7 @@ class SMI_geometry():
                  detector,
                  det_ini_angle=0,
                  det_angle_step=0,
-                 det_angles=None,
+                 det_angles=[],
                  alphai=0,
                  bs_kind=None):
 
@@ -178,7 +178,6 @@ class SMI_geometry():
             self.ai.append(ai_temp)
 
     def stitching_data(self, flag_scale=True, interp_factor=1):
-        #self.ai = []
         self.img_st, self.qp, self.qz = [], [], []
 
         if self.ai == []:
