@@ -89,13 +89,18 @@ class SMI_geometry():
         if len(lst_img) != len(self.bs):
             self.bs = self.bs + [[0, 0]]*(len(lst_img) - len(self.bs))
 
-        for img, bs in zip(lst_img, self.bs):
+        for i, (img, bs) in enumerate(zip(lst_img, self.bs)):
             if self.detector != 'rayonix':
                 if self.detector == 'Pilatus900kw':
-                    mask1, mask2, mask3 = self.det.calc_mask(bs=bs, bs_kind=self.bs_kind, optional_mask=optional_mask)
-                    self.masks.append(mask1)
-                    self.masks.append(mask2)
-                    self.masks.append(mask3)
+                    if self.det_angles != []:
+                        module = 0
+                        if np.rad2deg(self.det_angles[i]) < 4:
+                            module = 1
+
+                    masks = self.det.calc_mask(bs=bs, module=module, bs_kind=self.bs_kind, optional_mask=optional_mask)
+                    self.masks.append(masks[0])
+                    self.masks.append(masks[1])
+                    self.masks.append(masks[2])
 
                 else:
                     self.masks.append(self.det.calc_mask(bs=bs, bs_kind=self.bs_kind, optional_mask=optional_mask))
@@ -119,7 +124,8 @@ class SMI_geometry():
     def open_data_db(self, lst_img, optional_mask=None):
         """
         Function to load data directly a list of 2D array
-        :param lst_img: list of 2D arry containing the data. The data loaded together will be treated together as stitched images
+        :param lst_img: list of 2D array containing the data. The data loaded together will be treated together as
+        stitched images
         :param optional_mask: string. Can be 'tender' to mask extra chips of the detectors
         :return:
         """
@@ -181,14 +187,32 @@ class SMI_geometry():
         self.img_st, self.qp, self.qz = [], [], []
 
         if self.ai == []:
-            if not self.det_angles or len(self.det_angles) != len(self.imgs):
-                if self.detector == 'Pilatus900kw' and 3*len(self.det_angles) == len(self.imgs):
+            if len(self.det_angles) != len(self.imgs):
+                if self.detector != 'Pilatus900kw':
+                    if len(self.det_angles) !=0 and len(self.det_angles) > len(self.imgs):
+                        raise Exception('The number of angle for the %s is not good. '
+                                        'There is %s images but %s angles' % (self.detector,
+                                                                              int(len(self.imgs)),
+                                                                              len(self.det_angles)))
+
+                    self.det_angles = [self.det_ini_angle + i * self.det_angle_step
+                                       for i in range(0, len(self.imgs), 1)]
+
+                else:
+                    if len(self.det_angles) == 0:
+                        self.det_angles = [self.det_ini_angle + i * self.det_angle_step
+                                           for i in range(0, int(len(self.imgs)//3), 1)]
+
+                    if 3*len(self.det_angles) != len(self.imgs):
+                        raise Exception('The number of angle for the %s is not good. '
+                                        'There is %s images but %s angles' % (self.detector,
+                                                                              int(len(self.imgs)//3),
+                                                                              len(self.det_angles)))
+
                     angles = []
                     for angle in self.det_angles:
                         angles = angles + [angle - np.deg2rad(7.47), angle, angle + np.deg2rad(7.47)]
                     self.det_angles = angles
-                else:
-                    self.det_angles = [self.det_ini_angle + i * self.det_angle_step for i in range(0, len(self.imgs), 1)]
 
             if self.geometry == 'Transmission':
                 self.calculate_integrator_trans(self.det_angles)
@@ -241,7 +265,8 @@ class SMI_geometry():
                                                                           )
         elif self.geometry == 'Reflection':
             #ToDo implement a way to modify the dimension of the cake if required (it need to match the image dim ratio)
-            #if self.inpaints == []: self.inpainting()
+            # if self.inpaints == []:
+            #     self.inpainting()
             self.cake, self.q_cake, self.chi_cake = integrate1D.cake_gisaxs(self.img_st,
                                                                             self.qp,
                                                                             self.qz,
