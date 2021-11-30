@@ -1,7 +1,7 @@
 import numpy as np
 from pyFAI import detectors
 from pyFAI.detectors import Pilatus300kw, Pilatus1M, Pilatus100k, Pilatus300k
-
+from pyFAI.detectors._common import Detector
 
 
 class Pilatus100k_OPLS(Pilatus100k):
@@ -181,7 +181,7 @@ class VerticalPilatus900kw(Pilatus300kw):
     MODULE_GAP = (7, 17)
     aliases = ["Pilatus 900kw (Vertical)"]
 
-    def calc_mask(self, bs, bs_kind=None, optional_mask=None):
+    def calc_mask(self, bs, bs_kind=None, module=0, optional_mask=None):
         '''
         :param bs: (string) This is the beamstop position on teh detector (teh pixels behind will be mask inherently)
         :param bs_kind: (string) Not used for now but can be used if different beamstop are used
@@ -226,21 +226,24 @@ class VerticalPilatus900kw(Pilatus300kw):
                 i += 61
 
         #Beamstop
-        if bs == [0, 0]:
-            return np.logical_not(mask), \
-                   np.logical_not(mask), \
-                   np.logical_not(mask)
-        else:
-            mask1 = mask.copy()
-            mask1[bs[1]:, bs[0] - 8 : bs[0] + 8] = False
-            return np.logical_not(mask), \
-                   np.logical_not(mask1), \
-                   np.logical_not(mask)
+        masks = [np.logical_not(mask), np.logical_not(mask), np.logical_not(mask)]
+        mask1 = mask.copy()
+        mask1[bs[1]:, bs[0] - 8 : bs[0] + 8] = False
+        masks[module] = np.logical_not(mask1)
+        return masks
+        # if module == 0:
+        #     return np.logical_not(mask), \
+        #            np.logical_not(mask), \
+        #            np.logical_not(mask)
+        # else:
+        #     mask1 = mask.copy()
+        #     mask1[bs[1]:, bs[0] - 8 : bs[0] + 8] = False
+        #     return np.logical_not(mask), \
+        #            np.logical_not(mask1), \
+        #            np.logical_not(mask)
 
 
 # TODO: define rayonix class
-
-from pyFAI.detectors._common import Detector
 
 class rayonix(Detector):
     """
