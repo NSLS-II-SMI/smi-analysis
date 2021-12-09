@@ -153,3 +153,43 @@ def stitching(datas, ais, masks, geometry ='Reflection', interp_factor = 2, flag
 
     # return img, qp, qz, scales
     return img, mask, qp, qz, scales
+
+
+
+def translation_stitching(data1, data2, mask1, mask2, py1, py2, px1, px2):
+    positionY1 = py1
+    positionY2 = py2
+    positionX1 = px1
+    positionX2 = px2
+
+    I1 = 1
+    I2 = 1
+
+    deltaX = round((positionX2 - positionX1) / 0.172)
+    deltaY = round((positionY2 - positionY1) / 0.172)
+
+    print(deltaX, deltaY)
+
+    padtop1 = int(abs(deltaY))
+    padtop2 = 0
+    padbottom1 = 0
+    padbottom2 = int(abs(deltaY))
+    padleft1 = 0
+    padleft2 = 0
+    padright1 = int(abs(deltaX))
+    padright2 = int(abs(deltaX))
+
+    d1 = np.pad(data1, ((padtop1, padbottom1), (padleft1, padright1)), 'constant')
+    d2 = np.pad(data2, ((padtop2, padbottom2), (padleft2, padright2)), 'constant')
+
+    d1[np.where(d1<0)] = 0
+    d2[np.where(d2<0)] = 0
+
+    mask1 = np.pad(1 - mask1, ((padtop1, padbottom1), (padleft1, padright1)), 'constant')
+    mask2 = np.pad(1 - mask2, ((padtop2, padbottom2), (padleft2, padright2)), 'constant')
+
+    #with np.errstate(divide='ignore',invalid='ignore'):
+    data = (d1 + d2)/(mask2 + mask1) #* 0.5 * (I1 + I2)
+
+    data[np.isnan(data)] = 0
+    return data
