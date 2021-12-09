@@ -36,6 +36,7 @@ class Pilatus300k_OPLS(Pilatus300k):
     Pilatus 100k class inherited from the pyFAI Pilatus1M class
     This class is used to add a specific masking for the Pilatus 100k of OPLS beamline at BNL
     '''
+    MAX_SHAPE = (619, 487)
 
     def calc_mask(self, bs=None, bs_kind=None, optional_mask=None):
         '''
@@ -44,7 +45,7 @@ class Pilatus300k_OPLS(Pilatus300k):
         :param optional_mask: (string) This is usefull for tender x-ray energy and will add extra max at the chips junction
         :return: (a 2D array) A mask array with 0 and 1 with 0s where the image will be masked
         '''
-        mask = np.logical_not(detectors.Pilatus300k().calc_mask())
+        mask = np.logical_not(np.zeros(self.MAX_SHAPE))
         mask[:, :5], mask[:, -5:], mask[:5, :], mask[-5:, :] = False, False, False, False
 
         #Hot pixels needs to be defines
