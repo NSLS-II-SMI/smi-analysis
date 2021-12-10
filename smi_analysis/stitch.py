@@ -155,41 +155,37 @@ def stitching(datas, ais, masks, geometry ='Reflection', interp_factor = 2, flag
     return img, mask, qp, qz, scales
 
 
+def translation_stitching(datas, masks=None, pys=None, pxs=None):
+    if not pxs:
+        pxs = [[0]] * len(datas)
+    if not pys:
+        pys = [[0]] * len(datas)
+    if not masks:
+            masks = [np.zeros((np.shape(datas[0])))] * len(datas)
 
-def translation_stitching(data1, data2, mask1, mask2, py1, py2, px1, px2):
-    positionY1 = py1
-    positionY2 = py2
-    positionX1 = px1
-    positionX2 = px2
+    for i, (data, mask, py, px) in enumerate(zip(datas, masks, pys, pxs)):
+        delta_y = py - np.min(pys)
+        delta_y1 = py - np.max(pys)
+        padtop = int(abs(round(delta_y/0.172)))
+        padbottom = int(abs(round(delta_y1/0.172)))
 
-    I1 = 1
-    I2 = 1
+        delta_x = px - np.min(pxs)
+        delta_x1 = px - np.max(pxs)
+        padleft = int(abs(round(delta_x/0.172)))
+        padright = int(abs(round(delta_x1/0.172)))
 
-    deltaX = round((positionX2 - positionX1) / 0.172)
-    deltaY = round((positionY2 - positionY1) / 0.172)
+        d = np.pad(data, ((padtop, padbottom), (padleft, padright)), 'constant')
+        d[np.where(d < 0)] = 0
+        m = np.pad(1 - mask, ((padtop, padbottom), (padleft, padright)), 'constant')
 
-    print(deltaX, deltaY)
+        if i == 0:
+            dat_sum = d
+            mask_sum = m
 
-    padtop1 = int(abs(deltaY))
-    padtop2 = 0
-    padbottom1 = 0
-    padbottom2 = int(abs(deltaY))
-    padleft1 = 0
-    padleft2 = 0
-    padright1 = int(abs(deltaX))
-    padright2 = int(abs(deltaX))
+        else:
+            dat_sum = dat_sum + d
+            mask_sum = mask_sum + m
 
-    d1 = np.pad(data1, ((padtop1, padbottom1), (padleft1, padright1)), 'constant')
-    d2 = np.pad(data2, ((padtop2, padbottom2), (padleft2, padright2)), 'constant')
-
-    d1[np.where(d1<0)] = 0
-    d2[np.where(d2<0)] = 0
-
-    mask1 = np.pad(1 - mask1, ((padtop1, padbottom1), (padleft1, padright1)), 'constant')
-    mask2 = np.pad(1 - mask2, ((padtop2, padbottom2), (padleft2, padright2)), 'constant')
-
-    #with np.errstate(divide='ignore',invalid='ignore'):
-    data = (d1 + d2)/(mask2 + mask1) #* 0.5 * (I1 + I2)
-
+    data = dat_sum/mask_sum
     data[np.isnan(data)] = 0
     return data
