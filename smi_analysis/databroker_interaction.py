@@ -1,5 +1,6 @@
 import numpy as np
 from smi_analysis import SMI_beamline
+import xarray as xr
 
 def pull_db(doc):
     '''
@@ -159,8 +160,6 @@ def SMI_analysis_input(analysis_neededinfo):
 
     return SMI_waxs, SMI_saxs
 
-
-import xarray as xr
 
 #ToDo: This can be combined with the function pulling info from the baseline and start document later\
 # Will just separate them for now.

@@ -157,9 +157,9 @@ def stitching(datas, ais, masks, geometry ='Reflection', interp_factor = 2, flag
 
 def translation_stitching(datas, masks=None, pys=None, pxs=None):
     if not pxs:
-        pxs = [[0]] * len(datas)
+        pxs = [0] * len(datas)
     if not pys:
-        pys = [[0]] * len(datas)
+        pys = [0] * len(datas)
     if not masks:
             masks = [np.zeros((np.shape(datas[0])))] * len(datas)
 
