@@ -179,8 +179,8 @@ def integrate_rad_gisaxs(img, q_par, q_per, bins=1000, radial_range=None, azimut
                                                delta_pos1=np.ones_like(img_mask) * (q_per[1] - q_per[0])/np.shape(
                                                    img_mask)[0],
                                                bins=bins,
-                                               pos0Range=np.array([np.min(tth_array), np.max(tth_array)]),
-                                               pos1Range=q_per,
+                                               pos0_range=np.array([np.min(tth_array), np.max(tth_array)]),
+                                               pos1_range=q_per,
                                                dummy=None,
                                                delta_dummy=None,
                                                mask=img_mask.mask
@@ -318,8 +318,8 @@ def cake_gisaxs(img, q_par, q_per, bins=None, radial_range=None, azimuth_range=N
                                                pos1=chi_array,
                                                delta_pos1=np.ones_like(img_mask) * (q_per[1] - q_per[0])/bins[1],
                                                bins=bins,
-                                               pos0Range=np.array([np.min(radial_range), np.max(radial_range)]),
-                                               pos1Range=np.array([np.min(azimuth_range), np.max(azimuth_range)]),
+                                               pos0_range=np.array([np.min(radial_range), np.max(radial_range)]),
+                                               pos1_range=np.array([np.min(azimuth_range), np.max(azimuth_range)]),
                                                dummy=None,
                                                delta_dummy=None,
                                                mask=img_mask.mask)

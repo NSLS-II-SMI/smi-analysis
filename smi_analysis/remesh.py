@@ -88,8 +88,6 @@ def remesh_transmission(image, ai, bins=None, q_h_range=None, q_v_range=None, ma
                                               bins=bins,
                                               pos0_range=q_h_range,
                                               pos1_range=q_v_range,
-                                              pos0Range=q_h_range,
-                                              pos1Range=q_v_range,
                                               dummy=None,
                                               delta_dummy=None,
                                               allow_pos0_neg=True,
