@@ -237,10 +237,11 @@ class SMI_geometry():
         else:
             raise Exception('scaling waxs images error')
 
-    def inpainting(self):
+    def inpainting(self, **kwargs):
         self.inpaints, self.mask_inpaints = integrate1D.inpaint_saxs(self.imgs,
                                                                      self.ai,
-                                                                     self.masks
+                                                                     self.masks,
+                                                                     **kwargs
                                                                      )
 
     def caking(self, radial_range=None, azimuth_range=None, npt_rad=500, npt_azim=500):
