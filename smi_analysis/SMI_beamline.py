@@ -108,9 +108,7 @@ class SMI_geometry():
             if self.detector == 'Pilatus1m':
                 self.imgs.append(fabio.open(os.path.join(path, img)).data)
             elif self.detector == 'Pilatus900kw':
-                self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1)[:, :195])
-                self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1)[:, 212:212 + 195])
-                self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1)[:, -195:])
+                self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1))
             elif self.detector == 'Pilatus300kw':
                 self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1))
             elif self.detector == 'rayonix':
