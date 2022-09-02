@@ -182,33 +182,17 @@ class SMI_geometry():
     def stitching_data(self, flag_scale=True, interp_factor=1):
         self.img_st, self.qp, self.qz = [], [], []
 
+        if len(self.det_angles) == 0:
+            n_imgs = len(self.imgs)
+            # calculate detector angle positions accounting for non-zero initial detector angles 
+            self.det_angles = np.arange(self.det_ini_angle, self.det_angle_step*n_imgs + self.det_ini_angle, self.det_angle_step)
+
         if self.ai == []:
             if len(self.det_angles) != len(self.imgs):
-                if self.detector != 'Pilatus900kw':
-                    if len(self.det_angles) !=0 and len(self.det_angles) > len(self.imgs):
-                        raise Exception('The number of angle for the %s is not good. '
+                raise Exception('The number of angles for the %s is not good. '
                                         'There is %s images but %s angles' % (self.detector,
                                                                               int(len(self.imgs)),
                                                                               len(self.det_angles)))
-
-                    self.det_angles = [self.det_ini_angle + i * self.det_angle_step
-                                       for i in range(0, len(self.imgs), 1)]
-
-                else:
-                    if len(self.det_angles) == 0:
-                        self.det_angles = [self.det_ini_angle + i * self.det_angle_step
-                                           for i in range(0, int(len(self.imgs)//3), 1)]
-
-                    if 3*len(self.det_angles) != len(self.imgs):
-                        raise Exception('The number of angle for the %s is not good. '
-                                        'There is %s images but %s angles' % (self.detector,
-                                                                              int(len(self.imgs)//3),
-                                                                              len(self.det_angles)))
-
-                    angles = []
-                    for angle in self.det_angles:
-                        angles = angles + [angle - np.deg2rad(7.47), angle, angle + np.deg2rad(7.47)]
-                    self.det_angles = angles
 
             if self.geometry == 'Transmission':
                 self.calculate_integrator_trans(self.det_angles)
