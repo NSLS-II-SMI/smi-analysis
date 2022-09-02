@@ -142,9 +142,7 @@ class SMI_geometry():
             if self.detector == 'Pilatus1m':
                 self.imgs.append(img)
             elif self.detector == 'Pilatus900kw':
-                self.imgs.append([np.rot90(img, 1)[:, :195],
-                                  np.rot90(img, 1)[:, 212:212 + 195],
-                                  np.rot90(img, 1)[:, -195:]])
+                self.imgs.append(np.rot90(img, 1))
             elif self.detector == 'Pilatus300kw':
                 self.imgs.append(np.rot90(img, 1))
             elif self.detector == 'rayonix':
