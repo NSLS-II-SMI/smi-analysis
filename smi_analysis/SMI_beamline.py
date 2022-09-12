@@ -1,3 +1,4 @@
+import enum
 from pyFAI import azimuthalIntegrator
 from pygix import Transform
 from smi_analysis import Detector, stitch, integrate1D
@@ -154,6 +155,7 @@ class SMI_geometry():
                 self.imgs.append(img)
 
     def calculate_integrator_trans(self, det_rots):
+        self.ai = []
         ai = azimuthalIntegrator.AzimuthalIntegrator(**{'detector': self.det,
                                                         'rot1': 0,
                                                         'rot2': 0,
