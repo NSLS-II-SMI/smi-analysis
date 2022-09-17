@@ -192,11 +192,17 @@ class VerticalPilatus900kw(Pilatus900k):
         mask = np.rot90(np.logical_not(detectors.Pilatus900k().calc_mask()), 1)
 
         # Border of detector
-        mask[:, :5], mask[:, -5:], mask[:5, :], mask[-5:, :] = False, False, False, False
+        mask[:, :], mask[:, -5:], mask[:5, :], mask[-5:, :] = False, False, False, False
 
         # Hot pixels
         mask[15:19, 281:285] = False
         mask[305:309, 566:570] = False
+        mask[292:296, 571:575] = False
+        mask[305:309, 1108:1113] = False
+        mask[401:403, 579:581] = False
+        mask[182:184, 259:261] = False
+        mask[19:21, 287:289] = False
+        mask[1291:1294, 303:305] = False
 
         # TODO: update coordiniates, currently has coords based on 300kw geometry
         # For tender x-rays
