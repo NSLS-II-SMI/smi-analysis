@@ -192,7 +192,7 @@ class VerticalPilatus900kw(Pilatus900k):
         mask = np.rot90(np.logical_not(detectors.Pilatus900k().calc_mask()), 1)
 
         # Border of detector
-        mask[:, 5], mask[:, -5:], mask[:5, :], mask[-5:, :] = False, False, False, False
+        mask[:, :5], mask[:, -5:], mask[:5, :], mask[-5:, :] = False, False, False, False
 
         # Hot pixels
         mask[15:19, 281:285] = False
