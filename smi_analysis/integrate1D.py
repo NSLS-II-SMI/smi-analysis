@@ -3,7 +3,7 @@ from pyFAI.multi_geometry import MultiGeometry
 from pyFAI.ext import splitBBox
 
 
-def inpaint_saxs(imgs, ais, masks):
+def inpaint_saxs(imgs, ais, masks, **kwargs):
     """
     Inpaint the 2D image collected by the pixel detector to remove artifacts in later data reduction
 
@@ -19,7 +19,7 @@ def inpaint_saxs(imgs, ais, masks):
     inpaints, mask_inpaints = [], []
     for i, (img, ai, mask) in enumerate(zip(imgs, ais, masks)):
         inpaints.append(ai.inpainting(img.copy(order='C'),
-                                      mask))
+                                      mask, **kwargs))
         mask_inpaints.append(np.logical_not(np.ones_like(mask)))
 
     return inpaints, mask_inpaints

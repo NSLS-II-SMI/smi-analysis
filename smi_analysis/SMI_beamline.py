@@ -1,3 +1,4 @@
+import enum
 from pyFAI import azimuthalIntegrator
 from pygix import Transform
 from smi_analysis import Detector, stitch, integrate1D
@@ -108,9 +109,7 @@ class SMI_geometry():
             if self.detector == 'Pilatus1m':
                 self.imgs.append(fabio.open(os.path.join(path, img)).data)
             elif self.detector == 'Pilatus900kw':
-                self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1)[:, :195])
-                self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1)[:, 212:212 + 195])
-                self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1)[:, -195:])
+                self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1))
             elif self.detector == 'Pilatus300kw':
                 self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1))
             elif self.detector == 'rayonix':
@@ -144,9 +143,7 @@ class SMI_geometry():
             if self.detector == 'Pilatus1m':
                 self.imgs.append(img)
             elif self.detector == 'Pilatus900kw':
-                self.imgs.append([np.rot90(img, 1)[:, :195],
-                                  np.rot90(img, 1)[:, 212:212 + 195],
-                                  np.rot90(img, 1)[:, -195:]])
+                self.imgs.append(np.rot90(img, 1))
             elif self.detector == 'Pilatus300kw':
                 self.imgs.append(np.rot90(img, 1))
             elif self.detector == 'rayonix':
@@ -158,6 +155,7 @@ class SMI_geometry():
                 self.imgs.append(img)
 
     def calculate_integrator_trans(self, det_rots):
+        self.ai = []
         ai = azimuthalIntegrator.AzimuthalIntegrator(**{'detector': self.det,
                                                         'rot1': 0,
                                                         'rot2': 0,
@@ -186,33 +184,17 @@ class SMI_geometry():
     def stitching_data(self, flag_scale=True, interp_factor=1):
         self.img_st, self.qp, self.qz = [], [], []
 
+        if len(self.det_angles) == 0:
+            n_imgs = len(self.imgs)
+            # calculate detector angle positions accounting for non-zero initial detector angles 
+            self.det_angles = np.arange(self.det_ini_angle, self.det_angle_step*n_imgs + self.det_ini_angle, self.det_angle_step)
+
         if self.ai == []:
             if len(self.det_angles) != len(self.imgs):
-                if self.detector != 'Pilatus900kw':
-                    if len(self.det_angles) !=0 and len(self.det_angles) > len(self.imgs):
-                        raise Exception('The number of angle for the %s is not good. '
+                raise Exception('The number of angles for the %s is not good. '
                                         'There is %s images but %s angles' % (self.detector,
                                                                               int(len(self.imgs)),
                                                                               len(self.det_angles)))
-
-                    self.det_angles = [self.det_ini_angle + i * self.det_angle_step
-                                       for i in range(0, len(self.imgs), 1)]
-
-                else:
-                    if len(self.det_angles) == 0:
-                        self.det_angles = [self.det_ini_angle + i * self.det_angle_step
-                                           for i in range(0, int(len(self.imgs)//3), 1)]
-
-                    if 3*len(self.det_angles) != len(self.imgs):
-                        raise Exception('The number of angle for the %s is not good. '
-                                        'There is %s images but %s angles' % (self.detector,
-                                                                              int(len(self.imgs)//3),
-                                                                              len(self.det_angles)))
-
-                    angles = []
-                    for angle in self.det_angles:
-                        angles = angles + [angle - np.deg2rad(7.47), angle, angle + np.deg2rad(7.47)]
-                    self.det_angles = angles
 
             if self.geometry == 'Transmission':
                 self.calculate_integrator_trans(self.det_angles)
@@ -237,10 +219,11 @@ class SMI_geometry():
         else:
             raise Exception('scaling waxs images error')
 
-    def inpainting(self):
+    def inpainting(self, **kwargs):
         self.inpaints, self.mask_inpaints = integrate1D.inpaint_saxs(self.imgs,
                                                                      self.ai,
-                                                                     self.masks
+                                                                     self.masks,
+                                                                     **kwargs
                                                                      )
 
     def caking(self, radial_range=None, azimuth_range=None, npt_rad=500, npt_azim=500):
