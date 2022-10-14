@@ -2,8 +2,7 @@
 Usage
 =====
 
-Start by importing SMI_analysis.
+.. toctree::
+   :maxdepth: 2
 
-.. code-block:: python
-
-    import smi_analysis
+   tutorial/index

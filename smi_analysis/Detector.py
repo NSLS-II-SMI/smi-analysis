@@ -203,6 +203,7 @@ class VerticalPilatus900kw(Pilatus900k):
         mask[182:184, 259:261] = False
         mask[19:21, 287:289] = False
         mask[1291:1294, 303:305] = False
+        mask[1253:1256, 258:260] = False
 
         # TODO: update coordiniates, currently has coords based on 300kw geometry
         # For tender x-rays
