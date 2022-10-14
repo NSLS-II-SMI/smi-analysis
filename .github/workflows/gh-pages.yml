@@ -2,7 +2,7 @@ name: gh_pages
 
 on:
   push:
-    branches: [ main, docs-config ]
+    branches: [ master, docs-config, push, pull_request, workflow_dispatch ]
 jobs:
   build_docs_job:
     runs-on: ubuntu-latest
