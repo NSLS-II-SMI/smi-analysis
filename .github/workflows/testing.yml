@@ -52,6 +52,7 @@ jobs:
       - name: Install test requirements
         run: |
           set -vxeuo pipefail
+          python -m pip install -r requirements.txt
           python3 -m pip install -r requirements-dev.txt
           python3 -m pip list
 
