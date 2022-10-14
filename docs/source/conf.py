@@ -20,7 +20,7 @@
 import os
 import sys
 
-print(">>> os.path.abspath('../../')", os.path.abspath('../../'), [f.split('/')[-1] for f in os.listdir(os.path.abspath('../../'))])
+# sys.path.insert(0, os.path.abspath('../../smi_analysis/'))
 sys.path.insert(0, os.path.abspath('../../'))
 
 
