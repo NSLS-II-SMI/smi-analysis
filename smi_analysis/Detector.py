@@ -203,26 +203,28 @@ class VerticalPilatus900kw(Pilatus900k):
         mask[182:184, 259:261] = False
         mask[19:21, 287:289] = False
         mask[1291:1294, 303:305] = False
+        mask[1254, 259] = False
 
-        # TODO: update coordiniates, currently has coords based on 300kw geometry
-        # For tender x-rays
-        # if optional_mask == 'tender':
-        #     mask[:, 92:102] = False
-        #     i = 59
-        #     while i < np.shape(mask)[0]:
-        #         if 450 < i < 550:
-        #             i = 553
-        #         elif 970 < i < 1000:
-        #             i = 1047
-        #         mask[1475 - i - 6:1475 - i, :] = False
-        #         i += 61
+        if optional_mask == 'tender':
+            #vertical gaps of pilatus for each module
+            mask[:, 92:102] = False
+            mask[:, 304:314] = False
+            mask[:, 516:526] = False
+
+            #horizontal gaps of pilatus for each module
+            i = 59
+            while i < np.shape(mask)[0]:
+                if 450 < i < 550:
+                    i = 553
+                elif 970 < i < 1000:
+                    i = 1047
+                mask[1475 - i - 6:1475 - i, :] = False
+                i += 61
 
         #Beamstop
-        masks = [np.logical_not(mask), np.logical_not(mask), np.logical_not(mask)]
-        mask1 = mask.copy()
-        mask1[bs[1]:, bs[0] - 8 : bs[0] + 8] = False
-        masks[module] = np.logical_not(mask1)
-        return masks
+        mask[bs[1]:, bs[0] - 8: bs[0] + 8] = False
+        mask = np.logical_not(mask)
+        return mask
 
 
 # TODO: define rayonix class
