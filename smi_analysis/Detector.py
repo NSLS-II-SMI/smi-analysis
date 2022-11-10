@@ -1,8 +1,18 @@
 import numpy as np
 from pyFAI import detectors
-from pyFAI.detectors import Pilatus300kw, Pilatus1M, Pilatus100k, Pilatus300k, Pilatus900k
+from pyFAI.detectors import Pilatus, Pilatus300kw, Pilatus1M, Pilatus100k, Pilatus300k#, Pilatus900k
 from pyFAI.detectors._common import Detector
 
+
+class Pilatus900k(Pilatus):
+    """
+    Pilatus 900k detector, assembly of 3x3 modules
+    Available at NSLS-II 12-ID.
+
+    This is different from the "Pilatus CdTe 900kw" available at ESRF ID06-LVP which is 1x9 modules
+    """
+    MAX_SHAPE = (619, 1475)
+    aliases = ["Pilatus 900k"]
 
 class Pilatus100k_OPLS(Pilatus100k):
     '''
