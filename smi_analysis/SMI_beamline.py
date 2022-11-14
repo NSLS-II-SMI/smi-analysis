@@ -93,23 +93,21 @@ class SMI_geometry():
         for i, (img, bs) in enumerate(zip(lst_img, self.bs)):
             if self.detector != 'rayonix':
                 if self.detector == 'Pilatus900kw':
-                    if self.det_angles != []:
-                        module = 0
-                        if np.rad2deg(self.det_angles[i]) < 4:
-                            module = 1
-
-                    masks = self.det.calc_mask(bs=bs, module=module, bs_kind=self.bs_kind, optional_mask=optional_mask)
-                    self.masks.append(masks[0])
-                    self.masks.append(masks[1])
-                    self.masks.append(masks[2])
-
+                    masks = self.det.calc_mask(bs=bs, bs_kind=self.bs_kind, optional_mask=optional_mask)
+                    self.masks.append(masks[:, :195])
+                    self.masks.append(masks[:, 212:212 + 195])
+                    self.masks.append(masks[:, -195:])
                 else:
                     self.masks.append(self.det.calc_mask(bs=bs, bs_kind=self.bs_kind, optional_mask=optional_mask))
 
             if self.detector == 'Pilatus1m':
                 self.imgs.append(fabio.open(os.path.join(path, img)).data)
             elif self.detector == 'Pilatus900kw':
-                self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1))
+                # self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1))
+                self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1)[:, :195])
+                self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1)[:, 212:212 + 195])
+                self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1)[:, -195:])
+
             elif self.detector == 'Pilatus300kw':
                 self.imgs.append(np.rot90(fabio.open(os.path.join(path, img)).data, 1))
             elif self.detector == 'rayonix':
@@ -184,17 +182,33 @@ class SMI_geometry():
     def stitching_data(self, flag_scale=True, interp_factor=1):
         self.img_st, self.qp, self.qz = [], [], []
 
-        if len(self.det_angles) == 0:
-            n_imgs = len(self.imgs)
-            # calculate detector angle positions accounting for non-zero initial detector angles 
-            self.det_angles = np.arange(self.det_ini_angle, self.det_angle_step*n_imgs + self.det_ini_angle, self.det_angle_step)
-
         if self.ai == []:
             if len(self.det_angles) != len(self.imgs):
-                raise Exception('The number of angles for the %s is not good. '
+                if self.detector != 'Pilatus900kw':
+                    if len(self.det_angles) !=0 and len(self.det_angles) > len(self.imgs):
+                        raise Exception('The number of angle for the %s is not good. '
                                         'There is %s images but %s angles' % (self.detector,
                                                                               int(len(self.imgs)),
                                                                               len(self.det_angles)))
+
+                    self.det_angles = [self.det_ini_angle + i * self.det_angle_step
+                                       for i in range(0, len(self.imgs), 1)]
+
+                else:
+                    if len(self.det_angles) == 0:
+                        self.det_angles = [self.det_ini_angle + i * self.det_angle_step
+                                           for i in range(0, int(len(self.imgs)//3), 1)]
+
+                    if 3*len(self.det_angles) != len(self.imgs):
+                        raise Exception('The number of angle for the %s is not good. '
+                                        'There is %s images but %s angles' % (self.detector,
+                                                                              int(len(self.imgs)//3),
+                                                                              len(self.det_angles)))
+
+                    angles = []
+                    for angle in self.det_angles:
+                        angles = angles + [angle - np.deg2rad(7.47), angle, angle + np.deg2rad(7.47)]
+                    self.det_angles = angles
 
             if self.geometry == 'Transmission':
                 self.calculate_integrator_trans(self.det_angles)
