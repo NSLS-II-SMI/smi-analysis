@@ -187,8 +187,8 @@ class VerticalPilatus900kw(Pilatus900k):
     This class is used to add a specific masking for the Pilatus 900KW of SMI beamline at BNL
     '''
 
-    MAX_SHAPE = (1475, 619)
-    MODULE_SIZE = (487, 619)
+    MAX_SHAPE = (1475, 195)
+    MODULE_SIZE = (487, 195)
 
     aliases = ["Pilatus 900kw (Vertical)"]
 
