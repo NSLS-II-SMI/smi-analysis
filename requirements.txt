@@ -2,6 +2,6 @@
 h5py
 numpy
 pyFAI
-pygix
+pygix>=2022.11.14
 scipy
 xarray
