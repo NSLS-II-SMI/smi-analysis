@@ -40,7 +40,7 @@ class SMI_geometry():
         self.masks = []
         self.cake = []
         self.inpaints, self.mask_inpaints = [], []
-        self.img_st, self.mask_st = [], []
+        self.img_st, self.mask_st = np.array([]), np.array([])
         self.bs_kind = bs_kind
         self.scales = 1
 
@@ -241,7 +241,7 @@ class SMI_geometry():
                                                                      )
 
     def caking(self, radial_range=None, azimuth_range=None, npt_rad=500, npt_azim=500):
-        if self.img_st == []:
+        if not(self.img_st.size):
             self.stitching_data()
 
         if radial_range is None and 'Pilatus' in self.detector:
@@ -297,7 +297,7 @@ class SMI_geometry():
                                                                     )
 
         elif self.geometry == 'Reflection':
-            if self.img_st == []:
+            if not(self.img_st.size):
                 self.stitching_data()
             if radial_range is None and 'Pilatus' in self.detector:
                 radial_range = (0, self.qp[1])
@@ -346,7 +346,7 @@ class SMI_geometry():
                                                                   )
 
     def horizontal_integration(self, q_per_range=None, q_par_range=None):
-        if self.img_st == []:
+        if not(self.img_st.size):
             self.stitching_data()
 
         self.q_hor, self.I_hor = integrate1D.integrate_qpar(self.img_st,
@@ -357,7 +357,7 @@ class SMI_geometry():
                                                             )
 
     def vertical_integration(self, q_per_range=None, q_par_range=None):
-        if self.img_st == []:
+        if not(self.img_st.size):
             self.stitching_data()
 
         self.q_ver, self.I_ver = integrate1D.integrate_qper(self.img_st,
