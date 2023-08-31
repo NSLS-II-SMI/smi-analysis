@@ -250,7 +250,7 @@ class SMI_geometry():
             azimuth_range = (-180, 180)
 
         if self.geometry == 'Transmission':
-            if self.inpaints == []:
+            if np.array_equal(self.inpaints, []):
                 self.inpainting()
             self.cake, self.q_cake, self.chi_cake = integrate1D.cake_saxs(self.inpaints,
                                                                           self.ai,
@@ -276,7 +276,7 @@ class SMI_geometry():
         self.q_rad, self.I_rad = [], []
 
         if self.geometry == 'Transmission':
-            if self.inpaints == []:
+            if np.array_equal(self.inpaints, []):
                 self.inpainting()
             if radial_range is None and (self.detector == 'Pilatus300kw' or self.detector == 'Pilatus900kw'):
                 radial_range = (0.001, np.sqrt(self.qp[1]**2 + self.qz[1]**2))
@@ -331,7 +331,7 @@ class SMI_geometry():
         if azimuth_range is None and self.detector == 'Pilatus1m':
             azimuth_range = (-180, 180)
 
-        if self.cake == []:
+        if np.array_equal(self.cake, []):
             self.caking(radial_range=radial_range,
                         azimuth_range=azimuth_range,
                         npt_rad=npt_rad,
