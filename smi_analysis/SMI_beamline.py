@@ -71,6 +71,8 @@ class SMI_geometry():
             self.det = Detector.Pilatus100k_OPLS()
         elif self.detector == 'Pilatus300k_OPLS':
             self.det = Detector.Pilatus300k_OPLS()
+        elif self.detector == 'Pilatus800k_CMS':
+            self.det = Detector.Pilatus800k_CMS()
         else:
             raise Exception('Unknown detector for SMI. Should be either: Pilatus1m or Pilatus300kw or rayonix')
 
@@ -117,6 +119,8 @@ class SMI_geometry():
                 self.imgs.append(fabio.open(os.path.join(path, img)).data)
             elif self.detector == 'Pilatus300k_OPLS':
                 self.imgs.append(fabio.open(os.path.join(path, img)).data)
+            elif self.detector == 'Pilatus800k_CMS':
+                self.imgs.append(fabio.open(os.path.join(path, img)).data)
 
     def open_data_db(self, lst_img, optional_mask=None):
         """
@@ -150,6 +154,8 @@ class SMI_geometry():
             elif self.detector == 'Pilatus100k_OPLS':
                 self.imgs.append(img)
             elif self.detector == 'Pilatus300k_OPLS':
+                self.imgs.append(img)
+            elif self.detector == 'Pilatus800k_CMS':
                 self.imgs.append(img)
 
     def calculate_integrator_trans(self, det_rots):

@@ -267,3 +267,35 @@ class Rayonix(rayonix):
             mask[np.where(img < threshold)] = False
 
         return np.logical_not(mask)
+
+
+class Pilatus800k_CMS(Pilatus):
+    """
+    Pilatus 800k detector, assembly of 3x3 modules
+    Available at NSLS-II 11-BM.
+
+    This is different from the "Pilatus CdTe 900kw" available at ESRF ID06-LVP which is 1x9 modules
+    """
+    MAX_SHAPE = (1043, 981)
+    aliases = ["Pilatus 800k cms"]
+    
+    def calc_mask(self, bs=None, bs_kind=None, optional_mask=None):
+        '''
+        :param bs: (string) This is the beamstop position on teh detctor (teh pixels behind will be mask inherently)
+        :param bs_kind: (string) What beamstop is in: Only need to be defined if pindiode which have a different shape)
+        :param optional_mask: (string) This is usefull for tender x-ray energy and will add extra max at the chips junction
+        :return: (a 2D array) A mask array with 0 and 1 with 0s where the image will be masked
+        '''
+        mask = np.logical_not(np.zeros(self.MAX_SHAPE))
+        mask[:, :5], mask[:, -5:], mask[:5, :], mask[-5:, :] = False, False, False, False
+        mask[:, 486:494]= False
+        
+        #The two bottom missing modules
+        mask[620:, :486]= False
+
+        #Beamstop
+        if bs == [0, 0]:
+            return np.logical_not(mask)
+        else:
+            mask[bs[1]:, bs[0] - 8:bs[0] + 8] = False
+            return np.logical_not(mask)
