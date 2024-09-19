@@ -74,7 +74,7 @@ class SMI_geometry():
         elif self.detector == 'Pilatus800k_CMS':
             self.det = Detector.Pilatus800k_CMS()
         else:
-            raise Exception('Unknown detector for SMI. Should be either: Pilatus1m or Pilatus300kw or rayonix')
+            raise Exception('Unknown detector for SMI. Should be either: Pilatus1m or Pilatus300kw or Pilatus900kw or rayonix')
 
     def open_data(self, path, lst_img, optional_mask=None):
         """
@@ -185,6 +185,22 @@ class SMI_geometry():
             ai_temp.set_incident_angle(self.alphai)
             self.ai.append(ai_temp)
 
+    def calculate_integrator_gi2(self, det_rots):
+        self.ai = []
+        ai = azimuthalIntegrator.AzimuthalIntegrator(**{'detector': self.det,
+                                                        'rot1': 0,
+                                                        'rot2': 0,
+                                                        'rot3': 0}
+                                                     )
+
+        ai.setFit2D(self.sdd, self.center[0], self.center[1])
+        ai.set_wavelength(self.wav)
+
+        for i, det_rot in enumerate(det_rots):
+            ai_temp = copy.deepcopy(ai)
+            ai_temp.set_rot1(det_rot)
+            self.ai.append(ai_temp)
+
     def stitching_data(self, flag_scale=True, interp_factor=1):
         self.img_st, self.qp, self.qz = [], [], []
 
@@ -220,6 +236,8 @@ class SMI_geometry():
                 self.calculate_integrator_trans(self.det_angles)
             elif self.geometry == 'Reflection':
                 self.calculate_integrator_gi(self.det_angles)
+            elif self.geometry == 'Reflection_test':
+                self.calculate_integrator_gi2(self.det_angles)
             else:
                 raise Exception('Unknown geometry: should be either Transmission or Reflection')
 
